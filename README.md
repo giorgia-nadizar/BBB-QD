@@ -1,6 +1,11 @@
 # Body Brain Behavior - Quality Diversity
 
 ## Install guide
+Clone the repo and its submodules and `cd` into it
+```shell
+git clone --recurse-submodules https://github.com/giorgia-nadizar/BBB-QD.git
+cd BBB-QD
+```
 
 ### Normal usage
 Install some required libraries
@@ -20,11 +25,6 @@ conda install -c conda-forge libstdcxx-ng -y
 Build and install package
 ```shell
 python setup.py install
-```
-You might need to manually install jax and jaxlib as follows
-```shell
-pip install jax
-pip install jaxlib
 ```
 
 ### Docker
