@@ -12,18 +12,18 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
         self.robot_bounding_box = self.env.world.objects['robot'].get_structure().shape
         self.robot_structure_one_hot = self.get_one_hot_structure()
 
-    def reset(self):
+    def reset(self) -> ObsType:
         self.env.reset()
         return self.observe()
 
-    def step(self, action: ActType):
+    def step(self, action: ActType) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
         obs, reward, done, info = self.env.step(action)
         return self.observe(), reward, done, info
 
     def observe(self):
         raise NotImplementedError
 
-    def get_volumes_from_pos(self):
+    def get_volumes_from_pos(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         returns a 2d np array with volumes of each voxel (or -9999 if the voxel is not in the body)
         and a mask of the voxels that are in the body
@@ -41,7 +41,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
             mask[x, y] = 1
         return volumes, mask
 
-    def get_velocities_from_pos(self):
+    def get_velocities_from_pos(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         returns a 2d numpy array with velocity of each voxel (or -9999 if the voxel is not in the body)
         and a mask of the voxels that are in the body
@@ -60,7 +60,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
             mask[x, y] = 1
         return velocities, mask
 
-    def get_structure_corners(self, observation: ObsType):
+    def get_structure_corners(self, observation: ObsType) -> List[List[List[float]]]:
         """ process the observation to each voxel's corner that exists in reading order (left to right, top to bottom)
         evogym returns basic observation for each point mass (corner of voxel) in reading order.
         but for the voxels that are neighbors -- share a corner, only one observation is returned.
@@ -69,7 +69,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
         """
         f_structure = self.robot_structure.flatten()
         pointer_to_masses = 0
-        structure_corners = [[]] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
+        structure_corners = [[[]]] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
         for idx, val in enumerate(f_structure):
             if val == 0:
                 continue
@@ -147,7 +147,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
         return structure_corners
 
     @staticmethod
-    def polygon_area(x: List[float], y: List[float]):
+    def polygon_area(x: List[float], y: List[float]) -> float:
         """ Calculates the area of an arbitrary polygon given its vertices in x and y (list) coordinates.
         assumes the order is wrong """
         x[0], x[1] = x[1], x[0]
@@ -158,23 +158,23 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
         return area
 
     @staticmethod
-    def voxel_velocity(x: List[float], y: List[float]):
+    def voxel_velocity(x: List[float], y: List[float]) -> Tuple[float, float]:
         """ Calculates the velocity of a voxel given its 4 corners' velocities """
         return (x[0] + x[1] + x[2] + x[3]) / 4.0, (y[0] + y[1] + y[2] + y[3]) / 4.0
 
-    def two_d_idx_of(self, idx: int):
+    def two_d_idx_of(self, idx: int) -> Tuple[int, int]:
         """
         returns 2d index of a 1d index
         """
         return idx // self.robot_bounding_box[0], idx % self.robot_bounding_box[1]
 
-    def one_d_idx_of(self, x: int, y: int):
+    def one_d_idx_of(self, x: int, y: int) -> int:
         """
         returns 1d index of a 2d index
         """
         return x * self.robot_bounding_box[0] + y
 
-    def get_moore_neighbors(self, x: int, y: int, observation_range: int):
+    def get_moore_neighbors(self, x: int, y: int, observation_range: int) -> List[Tuple[float, List[int]]]:
         """
         returns the 8 neighbors of a voxel in the structure
         """
@@ -189,7 +189,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
                     neighbors.append((-1.0, None))
         return neighbors
 
-    def get_one_hot_structure(self):
+    def get_one_hot_structure(self) -> np.ndarray:
         """
         returns a one-hot encoding of the structure
         """
@@ -223,7 +223,7 @@ class LocalObservationWrapper(ObservationWrapper):
 
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_len,), dtype=np.float64)
 
-    def observe(self):
+    def observe(self) -> np.ndarray:
         # get the raw observations
         if self.kwargs['observe_voxel_volume']:
             volumes, volumes_mask = self.get_volumes_from_pos()
@@ -302,7 +302,7 @@ class GlobalObservationWrapper(ObservationWrapper):
 
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_len,), dtype=np.float64)
 
-    def observe(self):
+    def observe(self) -> np.ndarray:
         # get the raw observations
         if self.kwargs['observe_voxel_volume']:
             volumes, volumes_mask = self.get_volumes_from_pos()

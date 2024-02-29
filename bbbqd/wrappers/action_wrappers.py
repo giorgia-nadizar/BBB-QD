@@ -1,4 +1,6 @@
 from evogym.envs import *
+from gym.core import ActType, ObsType
+from typing import Any
 
 
 # noinspection PyUnresolvedReferences
@@ -35,7 +37,7 @@ class LocalActionWrapper(ActionWrapper):
                                        high=self.env.action_space.high[0] * np.ones(1, ),
                                        shape=(1,), dtype=np.float64)  # not sure about this one
 
-    def step(self, action: List[List[float]]):
+    def step(self, action: List[List[float]]) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
         action = action.flatten()
         obs, reward, done, info = self.env.step(action)
         if 'rl' in self.kwargs:
@@ -57,20 +59,20 @@ class GlobalActionWrapper(ActionWrapper):
                                        high=self.env.action_space.high[0] * np.ones(self.robot_structure.size),
                                        shape=(self.robot_structure.size,), dtype=np.float64)
 
-    def step(self, action: List[float]):
+    def step(self, action: List[float]) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
         action = action[self.active_voxels.flatten()]
         obs, reward, done, info = self.env.step(action)
         return obs, reward, done, info
 
 
-class ActionSkipWrapper(gym.core.Wrapper):
+class ActionSkipWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
     """ repeats an actions for skip timesteps """
 
-    def __init__(self, env, skip):
+    def __init__(self, env: EvoGymBase, skip: int):
         super().__init__(env)
         self.skip = skip
 
-    def step(self, action):
+    def step(self, action: ActType) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
         obs, reward, done, info = None, None, None, None
         total_reward = 0
         for _ in range(self.skip):
