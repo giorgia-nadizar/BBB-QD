@@ -1,1 +1,10 @@
 
+[submodule "evogymsrc/simulator/externals/pybind11"]
+	path = evogymsrc/simulator/externals/pybind11
+	url = https://github.com/pybind/pybind11
+[submodule "evogymsrc/simulator/externals/glfw"]
+	path = evogymsrc/simulator/externals/glfw
+	url = https://github.com/glfw/glfw
+[submodule "evogymsrc/simulator/externals/glew"]
+	path = evogymsrc/simulator/externals/glew
+	url = https://github.com/Perlmint/glew-cmake
