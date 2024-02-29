@@ -17,7 +17,11 @@ Build and install package
 ```
 python setup.py install
 ```
-
+You might need to manually install jax and jaxlib as follows
+```
+pip install jax
+pip install jaxlib
+```
 
 ### Docker
 Docker file will be available.
