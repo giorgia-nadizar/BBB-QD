@@ -6,6 +6,10 @@ Clone the repo and its submodules and `cd` into it
 git clone --recurse-submodules https://github.com/giorgia-nadizar/BBB-QD.git
 cd BBB-QD
 ```
+If you have already cloned the repository without its submodules, run the following command to fix it
+```shell
+git submodule update --init --recursive
+```
 
 ### Normal usage
 Install some required libraries
