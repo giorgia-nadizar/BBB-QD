@@ -26,3 +26,4 @@ dependencies:
     - ttkbootstrap==1.5.1
     - typing==3.7.4.3
     - --find-links https://storage.googleapis.com/jax-releases/jax_releases.html
+    - -r requirements.txt
