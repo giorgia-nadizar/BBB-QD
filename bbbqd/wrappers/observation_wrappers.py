@@ -1,8 +1,9 @@
 from evogym.envs import *
-from gym.core import ActType
+from gym.core import ActType, ObsType
 
 
-class ObservationWrapper(gym.Wrapper[EvoGymBase]):
+# noinspection PyUnresolvedReferences
+class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
     """ base class for observation wrappers """
 
     def __init__(self, env: EvoGymBase):
@@ -59,7 +60,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase]):
             mask[x, y] = 1
         return velocities, mask
 
-    def get_structure_corners(self, observation):
+    def get_structure_corners(self, observation: ObsType):
         """ process the observation to each voxel's corner that exists in reading order (left to right, top to bottom)
         evogym returns basic observation for each point mass (corner of voxel) in reading order.
         but for the voxels that are neighbors -- share a corner, only one observation is returned.
@@ -68,7 +69,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase]):
         """
         f_structure = self.robot_structure.flatten()
         pointer_to_masses = 0
-        structure_corners = [None] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
+        structure_corners = [[]] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
         for idx, val in enumerate(f_structure):
             if val == 0:
                 continue
@@ -146,7 +147,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase]):
         return structure_corners
 
     @staticmethod
-    def polygon_area(x, y):
+    def polygon_area(x: List[float], y: List[float]):
         """ Calculates the area of an arbitrary polygon given its vertices in x and y (list) coordinates.
         assumes the order is wrong """
         x[0], x[1] = x[1], x[0]
@@ -157,23 +158,23 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase]):
         return area
 
     @staticmethod
-    def voxel_velocity(x, y):
+    def voxel_velocity(x: List[float], y: List[float]):
         """ Calculates the velocity of a voxel given its 4 corners' velocities """
         return (x[0] + x[1] + x[2] + x[3]) / 4.0, (y[0] + y[1] + y[2] + y[3]) / 4.0
 
-    def two_d_idx_of(self, idx):
+    def two_d_idx_of(self, idx: int):
         """
         returns 2d index of a 1d index
         """
         return idx // self.robot_bounding_box[0], idx % self.robot_bounding_box[1]
 
-    def one_d_idx_of(self, x, y):
+    def one_d_idx_of(self, x: int, y: int):
         """
         returns 1d index of a 2d index
         """
         return x * self.robot_bounding_box[0] + y
 
-    def get_moore_neighbors(self, x, y, observation_range):
+    def get_moore_neighbors(self, x: int, y: int, observation_range: int):
         """
         returns the 8 neighbors of a voxel in the structure
         """
@@ -182,8 +183,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase]):
         max_obs_range = observation_range + 1
         for i in range(min_obs_range, max_obs_range):
             for j in range(min_obs_range, max_obs_range):
-                if (x + i >= 0 and x + i < self.robot_bounding_box[0]
-                        and y + j >= 0 and y + j < self.robot_bounding_box[1]):
+                if 0 <= x + i < self.robot_bounding_box[0] and 0 <= y + j < self.robot_bounding_box[1]:
                     neighbors.append((1.0, [x + i, y + j]))
                 else:
                     neighbors.append((-1.0, None))
@@ -205,7 +205,7 @@ class LocalObservationWrapper(ObservationWrapper):
     (the outer list has size n_voxels, each inner list has size obs_len, derived from the neighborhood size multiplied
     by the n of sensors in each voxel)"""
 
-    def __init__(self, env, **kwargs):
+    def __init__(self, env: EvoGymBase, **kwargs):
         super().__init__(env)
         self.kwargs = kwargs
         self.nr_voxel_in_neighborhood = (2 * self.kwargs['observation_range'] + 1) ** 2
@@ -285,7 +285,7 @@ class GlobalObservationWrapper(ObservationWrapper):
     (the observations of each voxel one after the other, read by row from above)
     """
 
-    def __init__(self, env, **kwargs):
+    def __init__(self, env: EvoGymBase, **kwargs):
         super().__init__(env)
         self.kwargs = kwargs
         # get the observation space
