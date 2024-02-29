@@ -1,19 +1,22 @@
 from evogym.envs import *
 
 
-class ActionSpaceCorrectionWrapper(gym.Wrapper[EvoGymBase]):
+# noinspection PyUnresolvedReferences
+class ActionSpaceCorrectionWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
     """ the observation space of evogym is given wrong. this wrapper corrects it """
 
-    def __init__(self, env):
+    def __init__(self, env: EvoGymBase):
         super().__init__(env)
         self.action_space = spaces.Box(np.ones_like(env.action_space.low) * -0.4,
-                                       np.ones_like(env.action_space.high) * 0.6, dtype=np.float64)
+                                       np.ones_like(env.action_space.high) * 0.6,
+                                       dtype=np.float64)
 
 
-class ActionWrapper(gym.Wrapper):
+# noinspection PyUnresolvedReferences
+class ActionWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
     """ base class for action wrappers """
 
-    def __init__(self, env):
+    def __init__(self, env: EvoGymBase):
         super().__init__(env)
         self.robot_structure = env.world.objects['robot'].get_structure()
         self.active_voxels = self.robot_structure == 3
@@ -21,17 +24,18 @@ class ActionWrapper(gym.Wrapper):
         self.robot_bounding_box = self.env.world.objects['robot'].get_structure().shape
 
 
+# noinspection PyUnresolvedReferences
 class LocalActionWrapper(ActionWrapper):
     """ flattens the action before feeding it to the inner step method (it expects it in a nested list) """
 
-    def __init__(self, env, **kwargs):
+    def __init__(self, env: EvoGymBase, **kwargs):
         super().__init__(env)
         self.kwargs = kwargs
         self.action_space = spaces.Box(low=self.env.action_space.low[0] * np.ones(1, ),
                                        high=self.env.action_space.high[0] * np.ones(1, ),
                                        shape=(1,), dtype=np.float64)  # not sure about this one
 
-    def step(self, action):
+    def step(self, action: List[List[float]]):
         action = action.flatten()
         obs, reward, done, info = self.env.step(action)
         if 'rl' in self.kwargs:
@@ -41,18 +45,19 @@ class LocalActionWrapper(ActionWrapper):
         return obs, reward, done, info
 
 
+# noinspection PyUnresolvedReferences
 class GlobalActionWrapper(ActionWrapper):
     """ only takes the values computed for the voxels that are actually active (it expects a number of actions
-    matching the grid size, regardless of where voxels are """
+    matching the grid size, regardless of where voxels are) """
 
-    def __init__(self, env, **kwargs):
+    def __init__(self, env: EvoGymBase, **kwargs):
         super().__init__(env)
         self.kwargs = kwargs
         self.action_space = spaces.Box(low=self.env.action_space.low[0] * np.ones(self.robot_structure.size),
                                        high=self.env.action_space.high[0] * np.ones(self.robot_structure.size),
                                        shape=(self.robot_structure.size,), dtype=np.float64)
 
-    def step(self, action):
+    def step(self, action: List[float]):
         action = action[self.active_voxels.flatten()]
         obs, reward, done, info = self.env.step(action)
         return obs, reward, done, info
