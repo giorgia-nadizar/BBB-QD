@@ -334,7 +334,7 @@ class GlobalObservationWrapper(ObservationWrapper):
                 else:
                     obs.extend(velocities[x, y, :])
         if self.kwargs.get('observe_time', False):
-            period = self.kwargs.get('observe_time_interval', False)
+            period = self.kwargs.get('observe_time_interval', 1)
             env_time = self.env.get_time() % period
             obs.append(env_time)
         # observation is ready
