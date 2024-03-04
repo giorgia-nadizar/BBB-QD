@@ -1,5 +1,5 @@
 from evogym.envs import *
-from gym.core import ActType, ObsType
+from gym.core import ObsType
 from typing import Any
 
 
@@ -28,16 +28,18 @@ class ActionWrapper(gym.Wrapper):
 
 # noinspection PyUnresolvedReferences
 class LocalActionWrapper(ActionWrapper):
-    """ flattens the action before feeding it to the inner step method (it expects it in a nested list) """
+    """ flattens the action before feeding it to the inner step method: it can be fed in a 2d array """
 
     def __init__(self, env: EvoGymBase, **kwargs):
         super().__init__(env)
         self.kwargs = kwargs
-        self.action_space = spaces.Box(low=self.env.action_space.low[0] * np.ones(1, ),
-                                       high=self.env.action_space.high[0] * np.ones(1, ),
-                                       shape=(1,), dtype=np.float64)  # not sure about this one
+        n_active_voxels = self.active_voxels.sum()
+        self.action_space = spaces.Box(low=self.env.action_space.low[0] * np.ones(n_active_voxels, ),
+                                       high=self.env.action_space.high[0] * np.ones(n_active_voxels, ),
+                                       shape=(n_active_voxels,), dtype=np.float64)
 
-    def step(self, action: List[List[float]]) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
+    # takes actions only for the active voxels (can be fed in a 1D or 2D array)
+    def step(self, action: np.ndarray) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
         action = action.flatten()
         obs, reward, done, info = self.env.step(action)
         if 'rl' in self.kwargs:
@@ -59,7 +61,8 @@ class GlobalActionWrapper(ActionWrapper):
                                        high=self.env.action_space.high[0] * np.ones(self.robot_structure.size),
                                        shape=(self.robot_structure.size,), dtype=np.float64)
 
-    def step(self, action: List[float]) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
+    # takes actions for all voxels and uses only the needed ones
+    def step(self, action: np.ndarray) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
         action = action[self.active_voxels.flatten()]
         obs, reward, done, info = self.env.step(action)
         return obs, reward, done, info
@@ -72,7 +75,7 @@ class ActionSkipWrapper(gym.Wrapper):
         super().__init__(env)
         self.skip = skip
 
-    def step(self, action: ActType) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
+    def step(self, action: np.ndarray) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
         obs, reward, done, info = None, None, None, None
         total_reward = 0
         for _ in range(self.skip):
