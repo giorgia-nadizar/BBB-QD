@@ -4,7 +4,7 @@ from typing import Any
 
 
 # noinspection PyUnresolvedReferences
-class ActionSpaceCorrectionWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
+class ActionSpaceCorrectionWrapper(gym.Wrapper):
     """ the observation space of evogym is given wrong. this wrapper corrects it """
 
     def __init__(self, env: EvoGymBase):
@@ -15,7 +15,7 @@ class ActionSpaceCorrectionWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
 
 
 # noinspection PyUnresolvedReferences
-class ActionWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
+class ActionWrapper(gym.Wrapper):
     """ base class for action wrappers """
 
     def __init__(self, env: EvoGymBase):
@@ -65,7 +65,7 @@ class GlobalActionWrapper(ActionWrapper):
         return obs, reward, done, info
 
 
-class ActionSkipWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
+class ActionSkipWrapper(gym.Wrapper):
     """ repeats an actions for skip timesteps """
 
     def __init__(self, env: EvoGymBase, skip: int):
