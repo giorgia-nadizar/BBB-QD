@@ -2,7 +2,7 @@ from bbbqd.wrappers.action_wrappers import *
 from bbbqd.wrappers.observation_wrappers import *
 
 
-class ControllerWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
+class ControllerWrapper(gym.Wrapper):
     def __init__(self, env: EvoGymBase, skip: int = 0):
         super().__init__(env)
         self.env = ActionSpaceCorrectionWrapper(env)
