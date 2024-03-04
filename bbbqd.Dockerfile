@@ -24,7 +24,7 @@ RUN apt-get update
 RUN apt-get install xvfb -y
 RUN apt-get install libglfw3 -y
 RUN apt-get install libgl1-mesa-glx -y
-RUN apt-get install xorg-dev libglu1-mesa-dev -y
+RUN apt-get update && apt-get -y install xorg-dev
 RUN apt-get install freeglut3-dev -y
 RUN apt-get update && apt-get -y install cmake
 ENV PATH=/opt/conda/envs/bbbqd/bin/:$PATH APP_FOLDER=/app
@@ -56,8 +56,10 @@ COPY evogymsrc evogymsrc
 COPY setup.py ./
 RUN python setup.py install
 
+COPY bbbqd bbbqd
+COPY examples/wrappers_tester.py ./
 COPY examples/install_tester.py ./
-CMD ["python", "./install_tester.py"]
+CMD ["python", "./wrappers_tester.py"]
 
 # xvfb-run -a python ./video.py
 #CMD ["python"]
