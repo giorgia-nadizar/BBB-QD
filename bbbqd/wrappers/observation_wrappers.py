@@ -1,7 +1,6 @@
 from evogym.envs import *
-from gym.core import ActType, ObsType
+from gym.core import ActType
 from typing import Any
-
 
 
 class ObservationWrapper(gym.Wrapper):
@@ -13,15 +12,15 @@ class ObservationWrapper(gym.Wrapper):
         self.robot_bounding_box = self.env.world.objects['robot'].get_structure().shape
         self.robot_structure_one_hot = self.get_one_hot_structure()
 
-    def reset(self) -> ObsType:
+    def reset(self) -> np.ndarray:
         self.env.reset()
         return self.observe()
 
-    def step(self, action: ActType) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
+    def step(self, action: ActType) -> Tuple[np.ndarray, float, bool, Dict[str, Any]]:
         obs, reward, done, info = self.env.step(action)
         return self.observe(), reward, done, info
 
-    def observe(self):
+    def observe(self) -> np.ndarray:
         raise NotImplementedError
 
     def get_volumes_from_pos(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -61,13 +60,15 @@ class ObservationWrapper(gym.Wrapper):
             mask[x, y] = 1
         return velocities, mask
 
-    def get_structure_corners(self, observation: ObsType) -> List[List[List[float]]]:
+    def get_structure_corners(self, observation: np.ndarray) -> List[List[List[float]]]:
         """ process the observation to each voxel's corner that exists in reading order (left to right, top to bottom)
         evogym returns basic observation for each point mass (corner of voxel) in reading order.
         but for the voxels that are neighbors -- share a corner, only one observation is returned.
         this function takes any observation in that form and returns a 2d list.
         each element of the list is a list of corners of the voxel and show the observation for 4 corners of the voxel.
         """
+        print(observation)
+        print(type(observation))
         f_structure = self.robot_structure.flatten()
         pointer_to_masses = 0
         structure_corners = [None] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
@@ -224,6 +225,7 @@ class LocalObservationWrapper(ObservationWrapper):
 
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_len,), dtype=np.float64)
 
+    # returns an array with two dimensions
     def observe(self) -> np.ndarray:
         # get the raw observations
         if self.kwargs.get('observe_voxel_volume', False):
@@ -303,6 +305,7 @@ class GlobalObservationWrapper(ObservationWrapper):
 
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_len,), dtype=np.float64)
 
+    # returns a unidimensional array
     def observe(self) -> np.ndarray:
         # get the raw observations
         if self.kwargs.get('observe_voxel_volume', False):
