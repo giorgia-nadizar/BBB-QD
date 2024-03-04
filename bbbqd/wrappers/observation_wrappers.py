@@ -67,8 +67,6 @@ class ObservationWrapper(gym.Wrapper):
         this function takes any observation in that form and returns a 2d list.
         each element of the list is a list of corners of the voxel and show the observation for 4 corners of the voxel.
         """
-        print(observation)
-        print(type(observation))
         f_structure = self.robot_structure.flatten()
         pointer_to_masses = 0
         structure_corners = [None] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
