@@ -1,9 +1,10 @@
 from evogym.envs import *
 from gym.core import ActType, ObsType
+from typing import Any
 
 
-# noinspection PyUnresolvedReferences
-class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
+
+class ObservationWrapper(gym.Wrapper):
     """ base class for observation wrappers """
 
     def __init__(self, env: EvoGymBase):
@@ -69,7 +70,7 @@ class ObservationWrapper(gym.Wrapper[EvoGymBase[ObsType, ActType]]):
         """
         f_structure = self.robot_structure.flatten()
         pointer_to_masses = 0
-        structure_corners = [[[]]] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
+        structure_corners = [None] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
         for idx, val in enumerate(f_structure):
             if val == 0:
                 continue
@@ -208,7 +209,7 @@ class LocalObservationWrapper(ObservationWrapper):
     def __init__(self, env: EvoGymBase, **kwargs):
         super().__init__(env)
         self.kwargs = kwargs
-        self.nr_voxel_in_neighborhood = (2 * self.kwargs.get('observation_range', 2) + 1) ** 2
+        self.nr_voxel_in_neighborhood = (2 * self.kwargs.get('observation_range', 1) + 1) ** 2
         # get the observation space
         obs_len = 0
         if self.kwargs.get('observe_structure', False):
