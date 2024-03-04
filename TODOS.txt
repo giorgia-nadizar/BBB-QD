@@ -1,0 +1,12 @@
+- check warnings in wrappers
+- understand content / check code
+- reason on action and observation types (fix them and make them coherent everywhere)
+
+
+STEPS
+0. run brain optimization only
+1. run body-brain GA (5x5 grid for body)
+2. run body-brain ME (brain descriptors)
+3. find descriptors
+    body:   - elongation vs n voxels (if variable size body)
+            - elongation vs compactness (if fixed size, 10 voxels)
