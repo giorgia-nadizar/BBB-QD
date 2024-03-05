@@ -17,7 +17,7 @@ if __name__ == '__main__':
     }
     if flags.get('wrapper', None) == 'global':
         env = GlobalWrapper(env, **flags)
-    elif flags['wrapper'] == 'local':
+    elif flags.get('wrapper', None) == 'local':
         env = LocalWrapper(env, **flags)
 
     env.reset()
