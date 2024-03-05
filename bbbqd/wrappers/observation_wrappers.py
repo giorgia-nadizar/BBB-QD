@@ -222,6 +222,7 @@ class LocalObservationWrapper(ObservationWrapper):
         assert obs_len > 0, 'No observation selected'
 
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_len,), dtype=np.float64)
+        self.observation_size = obs_len
 
     # returns an array with two dimensions
     def observe(self) -> np.ndarray:
@@ -302,6 +303,7 @@ class GlobalObservationWrapper(ObservationWrapper):
         assert obs_len > 0, 'No observation selected'
 
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_len,), dtype=np.float64)
+        self.observation_size = obs_len
 
     # returns a unidimensional array
     def observe(self) -> np.ndarray:

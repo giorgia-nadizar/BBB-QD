@@ -37,6 +37,7 @@ class LocalActionWrapper(ActionWrapper):
         self.action_space = spaces.Box(low=self.env.action_space.low[0] * np.ones(n_active_voxels, ),
                                        high=self.env.action_space.high[0] * np.ones(n_active_voxels, ),
                                        shape=(n_active_voxels,), dtype=np.float64)
+        self.action_size = n_active_voxels
 
     # takes actions only for the active voxels (can be fed in a 1D or 2D array)
     def step(self, action: np.ndarray) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
@@ -60,6 +61,7 @@ class GlobalActionWrapper(ActionWrapper):
         self.action_space = spaces.Box(low=self.env.action_space.low[0] * np.ones(self.robot_structure.size),
                                        high=self.env.action_space.high[0] * np.ones(self.robot_structure.size),
                                        shape=(self.robot_structure.size,), dtype=np.float64)
+        self.action_size = self.robot_structure.size
 
     # takes actions for all voxels and uses only the needed ones
     def step(self, action: np.ndarray) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
