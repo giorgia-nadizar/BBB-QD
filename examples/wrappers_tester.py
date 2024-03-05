@@ -2,7 +2,7 @@ import gym
 import evogym.envs
 import numpy as np
 
-from bbbqd.wrappers.controller_wrappers import GlobalWrapper, LocalWrapper
+from bbbqd.wrappers.full_wrappers import GlobalWrapper, LocalWrapper
 
 if __name__ == '__main__':
 
