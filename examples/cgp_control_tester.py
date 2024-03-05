@@ -20,8 +20,8 @@ config = {
     "env_name": "Walker-v0",
     "body": [[0, 0, 0], [3, 3, 3], [3, 0, 3]],
     "episode_length": 200,
-    "pop_size": 100,
-    "parents_size": 100,
+    "pop_size": 10,
+    "parents_size": 10,
     "n_iterations": 100,
     "seed": 0,
     "fixed_outputs": True,
@@ -76,14 +76,15 @@ def _evaluate_genome(genome: jnp.ndarray) -> float:
 
 genomes_list = [g for g in population]
 
-pool_size = config.get("pool_size", config["population_size"])
+pool_size = config.get("pool_size", config["pop_size"])
 
 fitnesses = []
 start_idx = 0
-with Pool(pool_size) as p:
-    current_genomes = genomes_list[start_idx:min(start_idx + pool_size, len(genomes_list))]
-    current_fitnesses = p.map(_evaluate_genome, current_genomes)
-    fitnesses = fitnesses + current_fitnesses
-    start_idx += pool_size
+while start_idx < len(genomes_list):
+    with Pool(pool_size) as p:
+        current_genomes = genomes_list[start_idx:min(start_idx + pool_size, len(genomes_list))]
+        current_fitnesses = p.map(_evaluate_genome, current_genomes)
+        fitnesses = fitnesses + current_fitnesses
+        start_idx += pool_size
 
 print(fitnesses)
