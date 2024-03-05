@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from bbbqd.wrappers.action_wrappers import *
 from bbbqd.wrappers.observation_wrappers import *
 
