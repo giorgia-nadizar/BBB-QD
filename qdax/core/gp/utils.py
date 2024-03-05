@@ -10,12 +10,6 @@ def update_config(config: Dict, env: Env = None) -> Dict:
     if config["solver"] not in ["cgp", "lgp"]:
         raise ValueError("Solver must be either cgp or lgp.")
 
-    if env is None:
-        env = environments.create(
-            config["env_name"],
-            episode_length=config.get("episode_length", 1000),
-        )
-
     config["n_functions"] = len(available_functions)
     config["n_constants"] = len(constants) if config.get("use_input_constants", True) else 0
     config["n_in_env"] = env.observation_size
