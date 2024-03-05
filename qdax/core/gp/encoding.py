@@ -1,10 +1,11 @@
 from functools import partial
-from typing import Callable, Tuple, Dict
+from typing import Callable, Tuple, Dict, Union
 
 import jax.numpy as jnp
 from brax.envs import Env
 from jax import jit
 from jax.lax import fori_loop
+from neat import genome
 
 from qdax.core.gp.functions import function_switch, constants
 from qdax.core.neuroevolution.buffers.buffer import Transition, QDTransitionDetailed
@@ -13,23 +14,45 @@ from qdax.types import ProgramState, EnvState, RNGKey
 
 
 def compute_encoding_function(
-    config: Dict,
-    outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
+        config: Dict,
+        outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
 ) -> Callable[
     [jnp.ndarray],
-    Callable[[jnp.ndarray, ProgramState], Tuple[ProgramState, jnp.ndarray]]
+    Union[Callable[[jnp.ndarray, ProgramState], Tuple[ProgramState, jnp.ndarray]],
+    Callable[[jnp.ndarray], jnp.ndarray]]
 ]:
     if config["solver"] == "cgp":
-        return partial(_genome_to_cgp_program, config=config, outputs_wrapper=outputs_wrapper)
-    if config["solver"] == "lgp":
-        return partial(_genome_to_lgp_program, config=config, outputs_wrapper=outputs_wrapper)
-    raise ValueError("Solver must be either cgp or lgp.")
+        encoding_function = partial(_genome_to_cgp_program, config=config, outputs_wrapper=outputs_wrapper)
+    elif config["solver"] == "lgp":
+        encoding_function = partial(_genome_to_lgp_program, config=config, outputs_wrapper=outputs_wrapper)
+    else:
+        raise ValueError("Solver must be either cgp or lgp.")
+    if config.get("program_wrapper", False):
+        wrapper = partial(_program_wrapper, state_size=config["program_state_size"])
+
+        def _encoding_function(genome: jnp.ndarray) -> Callable[[jnp.ndarray], jnp.ndarray]:
+            original_program = encoding_function(genome)
+            return wrapper(original_program)
+
+        return _encoding_function
+    else:
+        return encoding_function
+
+
+def _program_wrapper(original_program: Callable[[jnp.ndarray, ProgramState], Tuple[ProgramState, jnp.ndarray]],
+                     state_size: int) -> Callable[[ProgramState], jnp.ndarray]:
+    def _wrapped_program(env_state: jnp.ndarray) -> jnp.ndarray:
+        program_state = jnp.zeros(state_size)
+        _, action = original_program(env_state, program_state)
+        return action
+
+    return _wrapped_program
 
 
 def compute_genome_to_symmetric_step_fn(
-    environment: Env,
-    config: Dict,
-    outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
+        environment: Env,
+        config: Dict,
+        outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
 ) -> Callable[
     [jnp.ndarray],
     Callable[[EnvState, ProgramState, RNGKey], Tuple[EnvState, ProgramState, RNGKey, Transition]]
@@ -39,14 +62,14 @@ def compute_genome_to_symmetric_step_fn(
     action_joiner_function = get_action_joiner_func(config["env_name"])
 
     def _genome_to_program_step_fn(
-        genome: jnp.ndarray
+            genome: jnp.ndarray
     ) -> Callable[[EnvState, ProgramState, RNGKey], Tuple[EnvState, ProgramState, RNGKey, Transition]]:
         program = encoding_fn(genome)
 
         def _program_step_fn(
-            env_state: EnvState,
-            program_state: ProgramState,
-            random_key: RNGKey
+                env_state: EnvState,
+                program_state: ProgramState,
+                random_key: RNGKey
         ) -> Tuple[EnvState, ProgramState, RNGKey, Transition]:
             observation = env_state.obs
             symmetric_observation = observation.take(symmetric_input_indexes)
@@ -83,9 +106,9 @@ def compute_genome_to_symmetric_step_fn(
 
 
 def compute_genome_to_step_fn(
-    environment: Env,
-    config: Dict,
-    outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
+        environment: Env,
+        config: Dict,
+        outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
 ) -> Callable[
     [jnp.ndarray],
     Callable[[EnvState, ProgramState, RNGKey], Tuple[EnvState, ProgramState, RNGKey, Transition]]
@@ -93,14 +116,14 @@ def compute_genome_to_step_fn(
     encoding_fn = compute_encoding_function(config, outputs_wrapper)
 
     def _genome_to_program_step_fn(
-        genome: jnp.ndarray
+            genome: jnp.ndarray
     ) -> Callable[[EnvState, ProgramState, RNGKey], Tuple[EnvState, ProgramState, RNGKey, Transition]]:
         program = encoding_fn(genome)
 
         def _program_step_fn(
-            env_state: EnvState,
-            program_state: ProgramState,
-            random_key: RNGKey
+                env_state: EnvState,
+                program_state: ProgramState,
+                random_key: RNGKey
         ) -> Tuple[EnvState, ProgramState, RNGKey, Transition]:
             program_inputs = env_state.obs
             next_program_state, actions = program(program_inputs, program_state)
@@ -129,9 +152,9 @@ def compute_genome_to_step_fn(
 
 
 def _genome_to_cgp_program(
-    genome: jnp.ndarray,
-    config: Dict,
-    outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
+        genome: jnp.ndarray,
+        config: Dict,
+        outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
 ) -> Callable[[jnp.ndarray, ProgramState], Tuple[ProgramState, jnp.ndarray]]:
     x_genes, y_genes, f_genes, out_genes = jnp.split(genome, [config["n_nodes"] * i for i in range(1, 4)])
 
@@ -153,9 +176,9 @@ def _genome_to_cgp_program(
 
 
 def _genome_to_lgp_program(
-    genome: jnp.ndarray,
-    config: Dict,
-    outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
+        genome: jnp.ndarray,
+        config: Dict,
+        outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
 ) -> Callable[[jnp.ndarray, ProgramState], Tuple[ProgramState, jnp.ndarray]]:
     lhs_genes, x_genes, y_genes, f_genes = jnp.split(genome, 4)
     output_positions = jnp.arange(start=config["n_registers"] - config["n_out"], stop=config["n_registers"])
@@ -181,8 +204,8 @@ def _genome_to_lgp_program(
 
 @jit
 def _update_buffer(
-    buffer_idx: int,
-    carry: Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, ProgramState]
+        buffer_idx: int,
+        carry: Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, ProgramState]
 ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, ProgramState]:
     x_genes, y_genes, f_genes, buffer = carry
     n_in = len(buffer) - len(x_genes)
@@ -197,8 +220,8 @@ def _update_buffer(
 
 @jit
 def _update_register(
-    row_idx: int,
-    carry: Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, int, ProgramState]
+        row_idx: int,
+        carry: Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, int, ProgramState]
 ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, int, ProgramState]:
     lhs_genes, x_genes, y_genes, f_genes, n_in, register = carry
     lhs_idx = lhs_genes.at[row_idx].get() + n_in
