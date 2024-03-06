@@ -28,11 +28,7 @@ class ObservationWrapper(gym.Wrapper):
         returns a 2d np array with volumes of each voxel (or -9999 if the voxel is not in the body)
         and a mask of the voxels that are in the body
         """
-        # pos returns a numpy.ndarray of 2d, the first inner array are x-coords, the second are y-coords
         pos = self.env.object_pos_at_time(self.env.get_time(), 'robot')
-        # structure_corners is essentially a reshape of pos
-        # each voxel has a list of coordinates, this is listed for all voxels
-        # TODO fix this
         structure_corners = self.get_structure_corners(pos)
         volumes = np.ones_like(self.robot_structure, dtype=float) * -9999
         mask = np.zeros_like(self.robot_structure)
@@ -40,8 +36,7 @@ class ObservationWrapper(gym.Wrapper):
             if corners is None:
                 continue
             x, y = self.two_d_idx_of(idx)
-            area = self.polygon_area([x[0] for x in corners], [x[1] for x in corners])
-            volumes[x, y] = area
+            volumes[x, y] = self.polygon_area([x[0] for x in corners], [x[1] for x in corners])
             mask[x, y] = 1
         return volumes, mask
 
@@ -72,88 +67,93 @@ class ObservationWrapper(gym.Wrapper):
         each element of the list is a list of corners of the voxel and show the observation for 4 corners of the voxel.
         """
         f_structure = self.robot_structure.flatten()
-        pointer_to_masses = 0
+        masses_idx = 0
         structure_corners = [None] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
         for idx, val in enumerate(f_structure):
             if val == 0:
                 continue
             else:
-                if pointer_to_masses == 0:
-                    # the first voxel has order NO-NE-SO-SE
+                if masses_idx == 0:
+                    # the first voxel has order NW-NE-SW-SE
                     structure_corners[idx] = [[observation[0, 0], observation[1, 0]],
                                               [observation[0, 1], observation[1, 1]],
                                               [observation[0, 2], observation[1, 2]],
                                               [observation[0, 3], observation[1, 3]]]
-                    pointer_to_masses += 4
+                    masses_idx += 4
                 else:
                     # check the 2d location and find out whether this voxel has a neighbor to its left or up
-                    # (recall x is for the height, y is for the width)
-                    x, y = self.two_d_idx_of(idx)
-                    left_idx = self.one_d_idx_of(x, y - 1)
-                    up_idx = self.one_d_idx_of(x - 1, y)
-                    upright_idx = self.one_d_idx_of(x - 1, y + 1)
-                    upleft_idx = self.one_d_idx_of(x - 1, y - 1)
-                    # print(f"{idx}\t{left_idx}\t{up_idx}")
-                    if (y - 1 >= 0 and x - 1 >= 0
-                            and structure_corners[left_idx] is not None
-                            and structure_corners[up_idx] is not None):
-                        # both neighbors are occupied, only the bottom right point mass is new
+                    height, width = self.two_d_idx_of(idx)
+                    left_idx = self.one_d_idx_of(height, width - 1)
+                    up_idx = self.one_d_idx_of(height - 1, width)
+                    upright_idx = self.one_d_idx_of(height - 1, width + 1)
+                    # ?x
+                    # xo
+                    if (width - 1 >= 0 and height - 1 >= 0  # it can have neighbors W and N
+                            and structure_corners[left_idx] is not None  # neighbor W
+                            and structure_corners[up_idx] is not None):  # neighbor N
+                        # N and W neighbors are occupied: the new mass is only SE
                         structure_corners[idx] = [structure_corners[up_idx][2],
                                                   structure_corners[up_idx][3],
                                                   structure_corners[left_idx][3],
-                                                  [observation[0, pointer_to_masses],
-                                                   observation[1, pointer_to_masses]]]
-                        pointer_to_masses += 1
-                    elif (y - 1 >= 0
-                          and structure_corners[left_idx] is not None
-                          and y + 1 < self.robot_bounding_box[1]
-                          and x - 1 >= 0
-                          and structure_corners[upright_idx] is not None
-                          and self.robot_structure[x, y + 1] != 0):
-                        # left and up right are occupied, bottom right point mass is new
-                        # (connected to up right through right neighbor)
+                                                  [observation[0, masses_idx], observation[1, masses_idx]]
+                                                  ]
+                        masses_idx += 1
+                    # ??x
+                    # xox
+                    elif (width - 1 >= 0  # it can have neighbor W
+                          and structure_corners[left_idx] is not None  # neighbor W
+                          and width + 1 < self.robot_bounding_box[1]  # it can have neighbor E
+                          and height - 1 >= 0  # it can have neighbor N
+                          and structure_corners[upright_idx] is not None  # neighbor NE
+                          and self.robot_structure[height, width + 1] != 0):  # non-empty neighbor E
+                        # W and NE neighbors are occupied: the new mass is only SE
                         structure_corners[idx] = [structure_corners[left_idx][1],
                                                   structure_corners[upright_idx][2],
                                                   structure_corners[left_idx][3],
-                                                  [observation[0, pointer_to_masses],
-                                                   observation[1, pointer_to_masses]]]
-                        pointer_to_masses += 1
-                    elif y - 1 >= 0 and structure_corners[left_idx] is not None:
-                        # only the left neighbor is occupied, top right and bottom right point masses are new
+                                                  [observation[0, masses_idx],
+                                                   observation[1, masses_idx]]]
+                        masses_idx += 1
+                    # __
+                    # xo
+                    elif width - 1 >= 0 and structure_corners[left_idx] is not None:
+                        # only W neighbor is occupied: NE and SE masses are new
                         structure_corners[idx] = [structure_corners[left_idx][1],
-                                                  [observation[0, pointer_to_masses],
-                                                   observation[1, pointer_to_masses]],
+                                                  [observation[0, masses_idx], observation[1, masses_idx]],
                                                   structure_corners[left_idx][3],
-                                                  [observation[0, pointer_to_masses + 1],
-                                                   observation[1, pointer_to_masses + 1]]]
-                        pointer_to_masses += 2
-                    elif x - 1 >= 0 and structure_corners[up_idx] is not None:
-                        # only the up neighbor is occupied, bottom left and bottom right point masses are new
+                                                  [observation[0, masses_idx + 1], observation[1, masses_idx + 1]]
+                                                  ]
+                        masses_idx += 2
+                    # ?x
+                    # _o
+                    elif height - 1 >= 0 and structure_corners[up_idx] is not None:
+                        # only N neighbor is occupied: SW and SE masses are new
                         structure_corners[idx] = [structure_corners[up_idx][2],
                                                   structure_corners[up_idx][3],
-                                                  [observation[0, pointer_to_masses],
-                                                   observation[1, pointer_to_masses]],
-                                                  [observation[0, pointer_to_masses + 1],
-                                                   observation[1, pointer_to_masses + 1]]]
-                        pointer_to_masses += 2
-                    elif (y + 1 < self.robot_bounding_box[1] and x - 1 >= 0
-                          and structure_corners[upright_idx] is not None and self.robot_structure[x, y + 1] != 0):
-                        # only the up right neighbor is occupied, top left, bottom left, and bottom right point masses
-                        # are new (connected to upright through right neighbor)
+                                                  [observation[0, masses_idx], observation[1, masses_idx]],
+                                                  [observation[0, masses_idx + 1], observation[1, masses_idx + 1]]
+                                                  ]
+                        masses_idx += 2
+                    # _x
+                    # ox
+                    elif (width + 1 < self.robot_bounding_box[1]  # it can have neighbor E
+                          and height - 1 >= 0  # it can have neighbor N
+                          and structure_corners[upright_idx] is not None  # it has neighbor NE
+                          and self.robot_structure[height, width + 1] != 0):  # it has neighbor E
+                        # NE and E neighbors are occupied: NW, SW, and SE masses are new
                         structure_corners[idx] = [
-                            [observation[0, pointer_to_masses], observation[1, pointer_to_masses]],
+                            [observation[0, masses_idx], observation[1, masses_idx]],
                             structure_corners[upright_idx][2],
-                            [observation[0, pointer_to_masses + 1], observation[1, pointer_to_masses + 1]],
-                            [observation[0, pointer_to_masses + 2], observation[1, pointer_to_masses + 2]]]
-                        pointer_to_masses += 3
+                            [observation[0, masses_idx + 1], observation[1, masses_idx + 1]],
+                            [observation[0, masses_idx + 2], observation[1, masses_idx + 2]]]
+                        masses_idx += 3
                     else:
                         # no neighbors are occupied, all four point masses are new
                         structure_corners[idx] = [
-                            [observation[0, pointer_to_masses], observation[1, pointer_to_masses]],
-                            [observation[0, pointer_to_masses + 1], observation[1, pointer_to_masses + 1]],
-                            [observation[0, pointer_to_masses + 2], observation[1, pointer_to_masses + 2]],
-                            [observation[0, pointer_to_masses + 3], observation[1, pointer_to_masses + 3]]]
-                        pointer_to_masses += 4
+                            [observation[0, masses_idx], observation[1, masses_idx]],
+                            [observation[0, masses_idx + 1], observation[1, masses_idx + 1]],
+                            [observation[0, masses_idx + 2], observation[1, masses_idx + 2]],
+                            [observation[0, masses_idx + 3], observation[1, masses_idx + 3]]]
+                        masses_idx += 4
 
         return structure_corners
 
