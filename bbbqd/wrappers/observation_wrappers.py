@@ -28,7 +28,11 @@ class ObservationWrapper(gym.Wrapper):
         returns a 2d np array with volumes of each voxel (or -9999 if the voxel is not in the body)
         and a mask of the voxels that are in the body
         """
+        # pos returns a numpy.ndarray of 2d, the first inner array are x-coords, the second are y-coords
         pos = self.env.object_pos_at_time(self.env.get_time(), 'robot')
+        # structure_corners is essentially a reshape of pos
+        # each voxel has a list of coordinates, this is listed for all voxels
+        # TODO fix this
         structure_corners = self.get_structure_corners(pos)
         volumes = np.ones_like(self.robot_structure, dtype=float) * -9999
         mask = np.zeros_like(self.robot_structure)
@@ -75,19 +79,23 @@ class ObservationWrapper(gym.Wrapper):
                 continue
             else:
                 if pointer_to_masses == 0:
+                    # the first voxel has order NO-NE-SO-SE
                     structure_corners[idx] = [[observation[0, 0], observation[1, 0]],
                                               [observation[0, 1], observation[1, 1]],
                                               [observation[0, 2], observation[1, 2]],
                                               [observation[0, 3], observation[1, 3]]]
                     pointer_to_masses += 4
                 else:
-                    # check the 2d location and find out whether this voxel has a neighbor in to its left or up
+                    # check the 2d location and find out whether this voxel has a neighbor to its left or up
+                    # (recall x is for the height, y is for the width)
                     x, y = self.two_d_idx_of(idx)
                     left_idx = self.one_d_idx_of(x, y - 1)
                     up_idx = self.one_d_idx_of(x - 1, y)
                     upright_idx = self.one_d_idx_of(x - 1, y + 1)
                     upleft_idx = self.one_d_idx_of(x - 1, y - 1)
-                    if (y - 1 >= 0 and x - 1 >= 0 and structure_corners[left_idx] is not None
+                    # print(f"{idx}\t{left_idx}\t{up_idx}")
+                    if (y - 1 >= 0 and x - 1 >= 0
+                            and structure_corners[left_idx] is not None
                             and structure_corners[up_idx] is not None):
                         # both neighbors are occupied, only the bottom right point mass is new
                         structure_corners[idx] = [structure_corners[up_idx][2],
@@ -96,8 +104,11 @@ class ObservationWrapper(gym.Wrapper):
                                                   [observation[0, pointer_to_masses],
                                                    observation[1, pointer_to_masses]]]
                         pointer_to_masses += 1
-                    elif (y - 1 >= 0 and structure_corners[left_idx] is not None and y + 1 < self.robot_bounding_box[
-                        1] and x - 1 >= 0 and structure_corners[upright_idx] is not None
+                    elif (y - 1 >= 0
+                          and structure_corners[left_idx] is not None
+                          and y + 1 < self.robot_bounding_box[1]
+                          and x - 1 >= 0
+                          and structure_corners[upright_idx] is not None
                           and self.robot_structure[x, y + 1] != 0):
                         # left and up right are occupied, bottom right point mass is new
                         # (connected to up right through right neighbor)
@@ -166,13 +177,13 @@ class ObservationWrapper(gym.Wrapper):
         """
         returns 2d index of a 1d index
         """
-        return idx // self.robot_bounding_box[0], idx % self.robot_bounding_box[1]
+        return idx // self.robot_bounding_box[1], idx % self.robot_bounding_box[1]
 
     def one_d_idx_of(self, x: int, y: int) -> int:
         """
         returns 1d index of a 2d index
         """
-        return x * self.robot_bounding_box[0] + y
+        return x * self.robot_bounding_box[1] + y
 
     def get_moore_neighbors(self, x: int, y: int, observation_range: int) -> List[Tuple[float, List[int]]]:
         """
@@ -323,7 +334,6 @@ class GlobalObservationWrapper(ObservationWrapper):
             # observe volume
             if self.kwargs.get('observe_voxel_volume', False):
                 # if the voxel is not in the body, then insert 0
-                # print(f"{volumes_mask[x,y]} -> {volumes[x,y]}")
                 if volumes_mask[x, y] == 0:
                     obs.append(0)
                 else:
