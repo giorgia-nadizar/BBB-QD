@@ -15,7 +15,7 @@ def make_env(config: Dict[str, Any], body: np.ndarray = None) -> Union[gym.Env, 
         body = np.array(config["body"])
     env = gym.make(config["env_name"], body=body)
     if config["controller"] == "global":
-        env = GlobalWrapper(env, **config["flags"])
+        env = GlobalWrapper(env, skip=config.get("skip", 0), **config["flags"])
     elif config["controller"] == 'local':
-        env = LocalWrapper(env, **config["flags"])
+        env = LocalWrapper(env, skip=config.get("skip", 0), **config["flags"])
     return env
