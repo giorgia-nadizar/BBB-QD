@@ -6,7 +6,7 @@ from bbbqd.wrappers.full_wrappers import GlobalWrapper, LocalWrapper
 
 if __name__ == '__main__':
 
-    structure = np.array([[0, 0, 0], [3, 3, 3], [0, 0, 0]])
+    structure = np.array([[3, 3, 3], [0, 0, 0]])
     env = gym.make('Walker-v0', body=structure)
 
     flags = {
@@ -16,9 +16,9 @@ if __name__ == '__main__':
         'wrapper': 'global'
     }
     if flags.get('wrapper', None) == 'global':
-        env = GlobalWrapper(env, **flags)
+        env = GlobalWrapper(env, skip=5, **flags)
     elif flags.get('wrapper', None) == 'local':
-        env = LocalWrapper(env, **flags)
+        env = LocalWrapper(env, skip=5, **flags)
 
     env.reset()
     for _ in range(100):
