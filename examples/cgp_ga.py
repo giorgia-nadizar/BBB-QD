@@ -169,10 +169,13 @@ if __name__ == '__main__':
         "skip": 5
     }
 
+    counter = 0
     for seed in seeds:
         for body_name in bodies:
+            counter += 1
             cfg = copy.deepcopy(base_cfg)
             cfg["body"] = bodies[body_name]
             cfg["run_name"] = body_name
             cfg["seed"] = seed
+            print(f"{counter}/{len(seeds) * len(bodies)} -> {body_name}, {seed}")
             run_ga(cfg)
