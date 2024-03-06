@@ -133,7 +133,7 @@ class GARepertoire(Repertoire):
             self,
             batch_of_genotypes: Genotype,
             batch_of_fitnesses: Fitness,
-            elite_size : int=10
+            elite_size: int = 10
     ) -> GARepertoire:
         """Implements the repertoire addition rules.
 
@@ -161,7 +161,7 @@ class GARepertoire(Repertoire):
 
     @jax.jit
     def add(
-        self, batch_of_genotypes: Genotype, batch_of_fitnesses: Fitness
+            self, batch_of_genotypes: Genotype, batch_of_fitnesses: Fitness
     ) -> GARepertoire:
         """Implements the repertoire addition rules.
 
@@ -205,10 +205,10 @@ class GARepertoire(Repertoire):
 
     @classmethod
     def init(  # type: ignore
-        cls,
-        genotypes: Genotype,
-        fitnesses: Fitness,
-        population_size: int,
+            cls,
+            genotypes: Genotype,
+            fitnesses: Fitness,
+            population_size: int,
     ) -> GARepertoire:
         """Initializes the repertoire.
 
@@ -225,8 +225,8 @@ class GARepertoire(Repertoire):
         """
         # create default fitnesses
         default_fitnesses = -jnp.inf * jnp.ones(
-            # shape=(population_size, fitnesses.shape[-1])
-            shape=(population_size,)
+            shape=(population_size, fitnesses.shape[-1])
+            # shape=(population_size,)
         )
 
         # create default genotypes
@@ -239,4 +239,4 @@ class GARepertoire(Repertoire):
 
         new_repertoire = repertoire.add(genotypes, fitnesses)
 
-        return repertoire  # type: ignore
+        return new_repertoire  # type: ignore
