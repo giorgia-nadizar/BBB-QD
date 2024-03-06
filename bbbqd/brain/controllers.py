@@ -54,6 +54,6 @@ class JaxControllerWrapper(ControllerWrapper):
             jax_observation = jnp.asarray(observation)
         jax_action = self.controller.compute_action(jax_observation)
         if isinstance(jax_action, List):
-            return [np.asarray(x) for x in jax_action]
+            return np.asarray([np.asarray(x) for x in jax_action])
         else:
             return np.asarray(jax_action)
