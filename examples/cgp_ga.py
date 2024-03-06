@@ -142,7 +142,8 @@ def run_ga(config: Dict[str, Any]):
 if __name__ == '__main__':
     bodies = {
         "biped-3x2": [[3, 3, 3], [3, 0, 3]],
-        "biped-4x3": [[3, 3, 3, 3], [3, 3, 3, 3], [3, 0, 0, 3]]
+        "biped-4x3": [[3, 3, 3, 3], [3, 3, 3, 3], [3, 0, 0, 3]],
+        "worm-5x2": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3]]
     }
     seeds = range(10)
     base_cfg = {
