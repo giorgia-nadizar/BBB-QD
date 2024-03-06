@@ -37,7 +37,7 @@ class GeneticAlgorithm:
         self._emitter = emitter
         self._metrics_function = metrics_function
 
-    @partial(jax.jit, static_argnames=("self", "population_size"))
+    # @partial(jax.jit, static_argnames=("self", "population_size"))
     def init(
         self, init_genotypes: Genotype, population_size: int, random_key: RNGKey
     ) -> Tuple[GARepertoire, Optional[EmitterState], RNGKey]:
@@ -81,7 +81,7 @@ class GeneticAlgorithm:
 
         return repertoire, emitter_state, random_key
 
-    @partial(jax.jit, static_argnames=("self",))
+    # @partial(jax.jit, static_argnames=("self",))
     def update(
         self,
         repertoire: GARepertoire,
