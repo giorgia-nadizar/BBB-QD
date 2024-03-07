@@ -177,5 +177,5 @@ if __name__ == '__main__':
             cfg["body"] = bodies[body_name]
             cfg["run_name"] = f"{body_name}_{cfg['controller']}"
             cfg["seed"] = seed
-            print(f"{counter}/{len(seeds) * len(bodies)} -> {body_name}, {seed}")
+            print(f"{counter}/{len(seeds) * len(bodies)} -> {body_name}, {cfg['controller']}, {seed}")
             run_ga(cfg)
