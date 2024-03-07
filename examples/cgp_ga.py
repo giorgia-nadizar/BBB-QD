@@ -158,7 +158,7 @@ if __name__ == '__main__':
         "parents_size": 45,
         "n_iterations": 500,
         "fixed_outputs": True,
-        "controller": "global",
+        "controller": "local",
         "flags": {
             "observe_voxel_vel": True,
             "observe_voxel_volume": True,
@@ -175,7 +175,7 @@ if __name__ == '__main__':
             counter += 1
             cfg = copy.deepcopy(base_cfg)
             cfg["body"] = bodies[body_name]
-            cfg["run_name"] = body_name
+            cfg["run_name"] = f"{body_name}_{cfg['controller']}"
             cfg["seed"] = seed
             print(f"{counter}/{len(seeds) * len(bodies)} -> {body_name}, {seed}")
             run_ga(cfg)
