@@ -158,7 +158,7 @@ if __name__ == '__main__':
         "parents_size": 45,
         "n_iterations": 500,
         "fixed_outputs": True,
-        "controller": "local",
+        "controller": "global",
         "flags": {
             "observe_voxel_vel": True,
             "observe_voxel_volume": True,
