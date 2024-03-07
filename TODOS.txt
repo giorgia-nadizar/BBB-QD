@@ -1,3 +1,7 @@
+DEVELOPMENT
+- develop body evolver
+
+RUNS
 0. run brain optimization only (global controller)
 0.b run brain optimization with local controller
 1. run body-brain GA (5x5 grid for body)
