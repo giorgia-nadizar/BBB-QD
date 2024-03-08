@@ -77,7 +77,7 @@ if __name__ == '__main__':
     controller_creation_fn = compute_controller_generation_fn(config)
 
     # Body encoding function
-    body_encoding_fn = partial(encode_body, make_valid=True)
+    body_encoding_fn = partial(encode_body, make_connected=True)
 
     # Encode individual and evaluate it
     if config.get("fixed_body", True):

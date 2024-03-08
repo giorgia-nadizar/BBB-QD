@@ -2,7 +2,7 @@ import jax.numpy as jnp
 import numpy as np
 
 
-def remove_not_connected_components(body: np.ndarray) -> np.ndarray:
+def _remove_not_connected_components(body: np.ndarray) -> np.ndarray:
     body_size = len(body)
     visited = np.zeros_like(body)
     largest_connected_grid = np.zeros_like(body)
@@ -38,20 +38,9 @@ def has_actuator(robot: np.ndarray) -> bool:
     return np.any(robot == 3) or np.any(robot == 4)
 
 
-def encode_body(body_string: jnp.ndarray, make_valid: bool = False) -> np.ndarray:
+def encode_body(body_string: jnp.ndarray, make_connected: bool = False) -> np.ndarray:
     grid_size = np.sqrt(len(body_string)).astype(int)
     grid_body = np.reshape(np.asarray(body_string), (-1, grid_size))
-    if make_valid:
-        grid_body = remove_not_connected_components(grid_body)
+    if make_connected:
+        grid_body = _remove_not_connected_components(grid_body)
     return grid_body
-
-
-if __name__ == '__main__':
-    sample_body = np.asarray([
-        [1, 0, 1, 1],
-        [0, 0, 0, 1],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0]
-    ])
-    print(sample_body)
-    print(remove_not_connected_components(sample_body))
