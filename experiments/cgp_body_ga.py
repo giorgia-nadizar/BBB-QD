@@ -163,7 +163,7 @@ if __name__ == '__main__':
         "p_mut_inputs": 0.1,
         "p_mut_functions": 0.1,
         "p_mut_outputs": 0.3,
-        "p_mut_body": 0.1,
+        "p_mut_body": 0.05,
         "solver": "cgp",
         "env_name": "Walker-v0",
         "episode_length": 200,
