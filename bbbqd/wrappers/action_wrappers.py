@@ -41,21 +41,21 @@ class ActionWrapper(gym.Wrapper):
 class LocalActionWrapper(ActionWrapper):
     """ flattens the action before feeding it to the inner step method: it can be fed in a 2d array """
 
-    def __init__(self, env: EvoGymBase, **kwargs):
+    def __init__(self, env: EvoGymBase, rl: bool = False):
         super().__init__(env)
-        self.kwargs = kwargs
         n_active_voxels = self.active_voxels.sum()
         self.action_space = spaces.Box(low=self.env.action_space.low[0] * np.ones(n_active_voxels, ),
                                        high=self.env.action_space.high[0] * np.ones(n_active_voxels, ),
                                        shape=(n_active_voxels,), dtype=np.float64)
         self.action_size = 1
+        self.rl = rl
 
     # takes actions only for the active voxels (can be fed in a 1D or 2D array)
     def step(self, action: np.ndarray) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
         action = action.flatten()
         rescaled_action = self.rescale_action(action)
         obs, reward, done, info = self.env.step(rescaled_action)
-        if 'rl' in self.kwargs:
+        if self.rl:
             reward = np.array([reward] * self.active_voxels.sum())
             done = np.array([done] * self.active_voxels.sum())
         info = [info] * self.active_voxels.sum()
@@ -68,17 +68,18 @@ class GlobalActionWrapper(ActionWrapper):
     """ only takes the values computed for the voxels that are actually active (it expects a number of actions
     matching the grid size, regardless of where voxels are) """
 
-    def __init__(self, env: EvoGymBase, **kwargs):
+    def __init__(self, env: EvoGymBase, fixed_body: bool = False):
         super().__init__(env)
-        self.kwargs = kwargs
         self.action_space = spaces.Box(low=self.env.action_space.low[0] * np.ones(self.robot_structure.size),
                                        high=self.env.action_space.high[0] * np.ones(self.robot_structure.size),
                                        shape=(self.robot_structure.size,), dtype=np.float64)
-        self.action_size = self.robot_structure.size
+        self.fixed_body = fixed_body
+        self.action_size = self.robot_structure.size if not fixed_body else self.active_voxels.sum()
 
     # takes actions for all voxels and uses only the needed ones
     def step(self, action: np.ndarray) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
-        action = action[self.active_voxels.flatten()]
+        if not self.fixed_body:
+            action = action[self.active_voxels.flatten()]
         rescaled_action = self.rescale_action(action)
         obs, reward, done, info = self.env.step(rescaled_action)
         return obs, reward, done, info
