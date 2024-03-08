@@ -192,5 +192,5 @@ if __name__ == '__main__':
             cfg["seed"] = seed
             cfg["controller"] = controller
             cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}_{controller}"
-            print(f"{counter}/{len(seeds)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, {controller}, {seed}")
+            print(f"{counter}/{len(seeds) * len(controllers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, {controller}, {seed}")
             run_body_evo_ga(cfg)
