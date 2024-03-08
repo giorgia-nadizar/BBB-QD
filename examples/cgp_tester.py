@@ -1,8 +1,11 @@
+from functools import partial
+
 import jax
 import jax.numpy as jnp
 
+from bbbqd.body.bodies import encode_body
 from bbbqd.brain.controllers import compute_controller_generation_fn
-from bbbqd.core.evaluation import evaluate_controller
+from bbbqd.core.evaluation import evaluate_controller, evaluate_controller_and_body
 from bbbqd.wrappers import make_env
 from qdax.core.gp.encoding import compute_encoding_function
 from qdax.core.gp.individual import compute_genome_mask, generate_population
@@ -30,9 +33,10 @@ if __name__ == '__main__':
         "jax": True,
         "program_wrapper": True,
         "skip": 5,
-        "body": [[3, 3, 3], [3, 0, 3], [3, 0, 3]],
+        # "body": [[3, 3, 3], [3, 0, 3], [3, 0, 3]],
         "seed": 0,
-        "fixed_body": True
+        "fixed_body": False,
+        "grid_size": 5
     }
 
     # Create environment with wrappers
@@ -44,8 +48,14 @@ if __name__ == '__main__':
     # Init a random key
     random_key = jax.random.PRNGKey(config["seed"])
 
-    # Init population of controllers
-    genome_mask = compute_genome_mask(config, config["n_in"], config["n_out"])
+    # Init population (with single individual)
+    if config.get("fixed_body", True):
+        genome_mask = compute_genome_mask(config, config["n_in"], config["n_out"])
+    else:
+        body_mask = jnp.ones((config["grid_size"]) ** 2) * 5
+        controller_mask = compute_genome_mask(config, config["n_in"], config["n_out"])
+        genome_mask = jnp.concatenate([body_mask, controller_mask])
+
     random_key, pop_key = jax.random.split(random_key)
     if config.get("fixed_outputs", False):
         fixed_outputs = jnp.arange(start=config["buffer_size"] - config["n_out"], stop=config["buffer_size"], step=1)
@@ -61,12 +71,22 @@ if __name__ == '__main__':
     individual = population[0]
 
     # Define encoding function
-    encoding_fn = compute_encoding_function(config)
+    program_encoding_fn = compute_encoding_function(config)
 
     # Define function to return the proper controller
     controller_creation_fn = compute_controller_generation_fn(config)
 
-    # Get controller and evaluate it (with render mode)
-    program = encoding_fn(individual)
-    controller = controller_creation_fn(program)
-    evaluate_controller(controller, config, render=True)
+    # Body encoding function
+    body_encoding_fn = partial(encode_body, make_valid=True)
+
+    # Encode individual and evaluate it
+    if config.get("fixed_body", True):
+        evaluate_controller(controller=controller_creation_fn(program_encoding_fn(individual)),
+                            config=config,
+                            render=True)
+    else:
+        body_genome, controller_genome = jnp.split(individual, [config["grid_size"] ** 2])
+        evaluate_controller_and_body(controller=controller_creation_fn(program_encoding_fn(controller_genome)),
+                                     body=body_encoding_fn(body_genome),
+                                     config=config,
+                                     render=True)

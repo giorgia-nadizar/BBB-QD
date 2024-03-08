@@ -38,9 +38,11 @@ def has_actuator(robot: np.ndarray) -> bool:
     return np.any(robot == 3) or np.any(robot == 4)
 
 
-def encode_body(body_string: jnp.ndarray, check_validity: bool = False) -> np.ndarray:
+def encode_body(body_string: jnp.ndarray, make_valid: bool = False) -> np.ndarray:
     grid_size = np.sqrt(len(body_string)).astype(int)
     grid_body = np.reshape(np.asarray(body_string), (-1, grid_size))
+    if make_valid:
+        grid_body = remove_not_connected_components(grid_body)
     return grid_body
 
 
