@@ -1,9 +1,8 @@
 DEVELOPMENT
-- develop body evolver
+- check body evolver
 
 RUNS
-0. run brain optimization only (global controller)
-0.b run brain optimization with local controller
+0. run brain optimization only (global/local controller)
 1. run body-brain GA (5x5 grid for body)
 2. run body-brain ME (brain descriptors)
 3. find descriptors
