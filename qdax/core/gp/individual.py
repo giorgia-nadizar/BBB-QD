@@ -111,7 +111,7 @@ def generate_genome(
     integer_genome = jnp.floor(float_genome * genome_mask).astype(int)
     transformed_genome = genome_transformation_function(integer_genome)
     genome_trail, _ = jnp.split(transformed_genome, [len(transformed_genome) - len(fixed_trailing)])
-    return jnp.concatenate([genome_trail, fixed_trailing])
+    return jnp.concatenate([genome_trail, fixed_trailing]).astype(int)
 
 
 def generate_population(
