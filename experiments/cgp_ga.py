@@ -141,11 +141,15 @@ def run_ga(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     bodies = {
-        "biped-3x2": [[3, 3, 3], [3, 0, 3]],
-        "biped-4x3": [[3, 3, 3, 3], [3, 3, 3, 3], [3, 0, 0, 3]],
-        "worm-5x2": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3]]
+        # "biped-3x2": [[3, 3, 3], [3, 0, 3]],
+        # "biped-4x3": [[3, 3, 3, 3], [3, 3, 3, 3], [3, 0, 0, 3]],
+        "biped-5x4": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 0, 3, 3], [3, 3, 0, 3, 3]],
+        "worm-5x2": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3]],
+        "tripod-5x5": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 0, 3, 0, 3], [3, 0, 3, 0, 3], [3, 0, 3, 0, 3]],
+        "block-5x5": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3]]
     }
     seeds = range(10)
+    controllers = ["local", "global"]
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
@@ -158,7 +162,6 @@ if __name__ == '__main__':
         "parents_size": 45,
         "n_iterations": 500,
         "fixed_outputs": True,
-        "controller": "global",
         "flags": {
             "observe_voxel_vel": True,
             "observe_voxel_volume": True,
@@ -166,16 +169,19 @@ if __name__ == '__main__':
         },
         "jax": True,
         "program_wrapper": True,
-        "skip": 5
+        "skip": 5,
+        "fixed_body": True
     }
 
     counter = 0
     for seed in seeds:
-        for body_name in bodies:
-            counter += 1
-            cfg = copy.deepcopy(base_cfg)
-            cfg["body"] = bodies[body_name]
-            cfg["run_name"] = f"{body_name}_{cfg['controller']}"
-            cfg["seed"] = seed
-            print(f"{counter}/{len(seeds) * len(bodies)} -> {body_name}, {cfg['controller']}, {seed}")
-            run_ga(cfg)
+        for controller in controllers:
+            for body_name in bodies:
+                counter += 1
+                cfg = copy.deepcopy(base_cfg)
+                cfg["body"] = bodies[body_name]
+                cfg["controller"] = controller
+                cfg["run_name"] = f"{body_name}_{controller}"
+                cfg["seed"] = seed
+                print(f"{counter}/{len(seeds) * len(bodies) * len(controllers)} -> {body_name}, {controller}, {seed}")
+                run_ga(cfg)
