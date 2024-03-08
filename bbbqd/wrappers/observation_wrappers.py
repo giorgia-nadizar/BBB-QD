@@ -6,11 +6,16 @@ from typing import Any
 class ObservationWrapper(gym.Wrapper):
     """ base class for observation wrappers """
 
-    def __init__(self, env: EvoGymBase):
+    def __init__(self, env: EvoGymBase, obs_details: Dict[str, Any]):
         super().__init__(env)
         self.robot_structure = env.world.objects['robot'].get_structure()
         self.robot_bounding_box = self.env.world.objects['robot'].get_structure().shape
         self.robot_structure_one_hot = self.get_one_hot_structure()
+        self.observe_structure = obs_details.get('observe_structure', False)
+        self.observe_voxel_volume = obs_details.get('observe_voxel_volume', False)
+        self.observe_voxel_vel = obs_details.get('observe_voxel_vel', False)
+        self.observe_time = obs_details.get('observe_time', False)
+        self.observe_time_interval = obs_details.get('observe_time_interval', 1)
 
     def reset(self) -> np.ndarray:
         self.env.reset()
@@ -216,19 +221,19 @@ class LocalObservationWrapper(ObservationWrapper):
     (the outer list has size n_voxels, each inner list has size obs_len, derived from the neighborhood size multiplied
     by the n of sensors in each voxel)"""
 
-    def __init__(self, env: EvoGymBase, **kwargs):
-        super().__init__(env)
-        self.kwargs = kwargs
-        self.nr_voxel_in_neighborhood = (2 * self.kwargs.get('observation_range', 1) + 1) ** 2
+    def __init__(self, env: EvoGymBase, obs_details: Dict[str, Any]):
+        super().__init__(env, obs_details=obs_details)
+        self.observation_range = obs_details.get('observation_range', 1)
+        self.nr_voxel_in_neighborhood = (2 * self.observation_range + 1) ** 2
         # get the observation space
         obs_len = 0
-        if self.kwargs.get('observe_structure', False):
+        if self.observe_structure:
             obs_len += self.nr_voxel_in_neighborhood * 5
-        if self.kwargs.get('observe_voxel_volume', False):
+        if self.observe_voxel_volume:
             obs_len += self.nr_voxel_in_neighborhood
-        if self.kwargs.get('observe_voxel_vel', False):
+        if self.observe_voxel_vel:
             obs_len += self.nr_voxel_in_neighborhood * 2
-        if self.kwargs.get('observe_time', False):
+        if self.observe_time:
             obs_len += 1
         assert obs_len > 0, 'No observation selected'
 
@@ -238,9 +243,9 @@ class LocalObservationWrapper(ObservationWrapper):
     # returns an array with two dimensions
     def observe(self) -> np.ndarray:
         # get the raw observations
-        if self.kwargs.get('observe_voxel_volume', False):
+        if self.observe_voxel_volume:
             volumes, volumes_mask = self.get_volumes_from_pos()
-        if self.kwargs.get('observe_voxel_vel', False):
+        if self.observe_voxel_vel:
             velocities, velocities_mask = self.get_velocities_from_pos()
         # walk through the structure and create the observation per each voxel
         observations = []
@@ -250,39 +255,39 @@ class LocalObservationWrapper(ObservationWrapper):
                 continue
             obs = []
             # get the neighbors
-            neighbors = self.get_moore_neighbors(x, y, self.kwargs.get('observation_range', 2))
+            neighbors = self.get_moore_neighbors(x, y, self.observation_range)
             # get the volumes of the neighbors
             for neighbor in neighbors:
                 if neighbor[0] == -1:  # neighbor is only -1 when it is out of bounds
                     # observe structure
-                    if self.kwargs.get('observe_structure', False):
+                    if self.observe_structure:
                         obs.extend([1, 0, 0, 0, 0])
                     # observe volume
-                    if self.kwargs.get('observe_voxel_volume', False):
+                    if self.observe_voxel_volume:
                         obs.append(0)
                     # observe velocity
-                    if self.kwargs.get('observe_voxel_vel', False):
+                    if self.observe_voxel_vel:
                         obs.extend([0, 0])
                 else:
                     # observe structure
-                    if self.kwargs.get('observe_structure', False):
+                    if self.observe_structure:
                         obs.extend(self.robot_structure_one_hot[neighbor[1][0], neighbor[1][1], :])
                     # observe volume
-                    if self.kwargs.get('observe_voxel_volume', False):
+                    if self.observe_voxel_volume:
                         # if the voxel is not in the body, then insert 0
                         if volumes_mask[neighbor[1][0], neighbor[1][1]] == 0:
                             obs.append(0)
                         else:
                             obs.append(volumes[neighbor[1][0], neighbor[1][1]])
                     # observe velocity
-                    if self.kwargs.get('observe_voxel_vel', False):
+                    if self.observe_voxel_vel:
                         # if the voxel is not in the body, then insert 0
                         if velocities_mask[neighbor[1][0], neighbor[1][1]] == 0:
                             obs.extend([0, 0])
                         else:
                             obs.extend(velocities[neighbor[1][0], neighbor[1][1], :])
-            if self.kwargs.get('observe_time', False):
-                period = self.kwargs.get('observe_time_interval', 1)
+            if self.observe_time:
+                period = self.observe_time_interval
                 env_time = self.env.get_time() % period
                 obs.append(env_time)
             # observation is ready
@@ -298,18 +303,22 @@ class GlobalObservationWrapper(ObservationWrapper):
     (the observations of each voxel one after the other, read by row from above)
     """
 
-    def __init__(self, env: EvoGymBase, **kwargs):
-        super().__init__(env)
-        self.kwargs = kwargs
+    def __init__(self, env: EvoGymBase, obs_details: Dict[str, Any], fixed_body: bool = False):
+        super().__init__(env, obs_details=obs_details)
+        self.fixed_body = fixed_body
+        active_voxels = self.robot_structure == 3
+        active_voxels += self.robot_structure == 4
+        self.n_active_voxels = active_voxels.sum()
         # get the observation space
+        size_to_multiply = self.n_active_voxels if self.fixed_body else self.robot_structure.size
         obs_len = 0
-        if self.kwargs.get('observe_structure', False):
-            obs_len += 5 * self.robot_structure.size
-        if self.kwargs.get('observe_voxel_volume', False):
-            obs_len += 1 * self.robot_structure.size
-        if self.kwargs.get('observe_voxel_vel', False):
-            obs_len += 2 * self.robot_structure.size
-        if self.kwargs.get('observe_time', False):
+        if self.observe_structure:
+            obs_len += 5 * size_to_multiply
+        if self.observe_voxel_volume:
+            obs_len += 1 * size_to_multiply
+        if self.observe_voxel_vel:
+            obs_len += 2 * size_to_multiply
+        if self.observe_time:
             obs_len += 1
         assert obs_len > 0, 'No observation selected'
 
@@ -319,9 +328,9 @@ class GlobalObservationWrapper(ObservationWrapper):
     # returns a unidimensional array
     def observe(self) -> np.ndarray:
         # get the raw observations
-        if self.kwargs.get('observe_voxel_volume', False):
+        if self.observe_voxel_volume:
             volumes, volumes_mask = self.get_volumes_from_pos()
-        if self.kwargs.get('observe_voxel_vel', False):
+        if self.observe_voxel_vel:
             velocities, velocities_mask = self.get_velocities_from_pos()
         # walk through the bounding box and create the observation per each grid
         obs = []
@@ -329,24 +338,27 @@ class GlobalObservationWrapper(ObservationWrapper):
             # find the position of the voxel
             x, y = self.two_d_idx_of(idx)
             # observe structure
-            if self.kwargs.get('observe_structure', False):
-                obs.extend(self.robot_structure_one_hot[x, y, :])
+            if self.observe_structure:
+                if (self.fixed_body and self.robot_structure_one_hot[x, y, 0] == 0) or not self.fixed_body:
+                    obs.extend(self.robot_structure_one_hot[x, y, :])
             # observe volume
-            if self.kwargs.get('observe_voxel_volume', False):
-                # if the voxel is not in the body, then insert 0
+            if self.observe_voxel_volume:
+                # if the voxel is not in the body, then insert 0 (unless the body is fixed)
                 if volumes_mask[x, y] == 0:
-                    obs.append(0)
+                    if not self.fixed_body:
+                        obs.append(0)
                 else:
                     obs.append(volumes[x, y])
             # observe velocity
-            if self.kwargs.get('observe_voxel_vel', False):
-                # if the voxel is not in the body, then insert 0
+            if self.observe_voxel_vel:
+                # if the voxel is not in the body, then insert 0 (unless the body is fixed)
                 if velocities_mask[x, y] == 0:
-                    obs.extend([0, 0])
+                    if not self.fixed_body:
+                        obs.extend([0, 0])
                 else:
                     obs.extend(velocities[x, y, :])
-        if self.kwargs.get('observe_time', False):
-            period = self.kwargs.get('observe_time_interval', 1)
+        if self.observe_time:
+            period = self.observe_time_interval
             env_time = self.env.get_time() % period
             obs.append(env_time)
         # observation is ready
