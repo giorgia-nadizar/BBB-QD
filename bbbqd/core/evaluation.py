@@ -2,6 +2,7 @@ from typing import Union, Dict, Any
 
 import numpy as np
 
+from bbbqd.body.bodies import has_actuator
 from bbbqd.brain.controllers import ControllerWrapper, Controller
 from bbbqd.wrappers import make_env
 
@@ -11,8 +12,11 @@ def evaluate_controller_and_body(controller: Union[Controller, ControllerWrapper
                                  body: Union[np.ndarray, None],
                                  config: Dict[str, Any],
                                  render: bool = False) -> float:
-    env = make_env(config, body)
+    if not has_actuator(body):
+        print("Body with no actuator, negative infinity fitness.")
+        return -np.infty
 
+    env = make_env(config, body)
     cumulative_reward = 0
     obs = env.reset()
     for _ in range(config["episode_length"]):
