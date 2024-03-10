@@ -1,6 +1,5 @@
 DEVELOPMENT
 - implement tri-archive ME
-- implement centroids generator
 - implement behavior descriptors (continue)
 - refactor body+brain descriptors to make them alike
 
