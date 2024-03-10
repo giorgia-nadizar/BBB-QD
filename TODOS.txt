@@ -1,7 +1,8 @@
 DEVELOPMENT
-- implement behavior descriptors
-- refactor body+brain descriptors to make them alike
 - implement tri-archive ME
+- implement centroids generator
+- implement behavior descriptors (continue)
+- refactor body+brain descriptors to make them alike
 
 RUNS
 0. (wait termination + results) run brain optimization only (global/local controller)
@@ -10,7 +11,7 @@ RUNS
     - centroids generation script
     - load centroids for brain
     - de-jax ME
-3. find descriptors
-    - body: - elongation vs n voxels (if variable size body)
+3. choose descriptors
+    - (implemented already) body: - elongation vs n voxels (if variable size body)
             - elongation vs compactness (if fixed size, 10 voxels)
     - behavior: - take inspiration from VSR code
