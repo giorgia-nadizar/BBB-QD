@@ -1,5 +1,4 @@
 DEVELOPMENT
-- finish body descriptors implementation
 - implement behavior descriptors
 - refactor body+brain descriptors to make them alike
 - implement tri-archive ME
