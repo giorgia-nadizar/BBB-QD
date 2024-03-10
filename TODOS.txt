@@ -1,7 +1,7 @@
 DEVELOPMENT
-- implement tri-archive ME
 - implement behavior descriptors (continue)
 - refactor body+brain descriptors to make them alike
+- (opt.) refactor multi-archive ME to reduce code duplication
 
 RUNS
 0. (wait termination + results) run brain optimization only (global/local controller)
