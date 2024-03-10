@@ -12,6 +12,7 @@ from jax import numpy as jnp
 from qdax.core.containers.ga_repertoire import GARepertoire
 from qdax.core.containers.mapelites_bi_repertoire import MapElitesBiRepertoire
 from qdax.core.containers.mapelites_repertoire import MapElitesRepertoire, get_cells_indices
+from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire
 from qdax.core.containers.mome_repertoire import MOMERepertoire
 from qdax.core.containers.nsga2_repertoire import NSGA2Repertoire
 from qdax.types import Metrics
@@ -52,7 +53,7 @@ class CSVLogger:
 
 
 def default_ga_metrics(
-    repertoire: GARepertoire,
+        repertoire: GARepertoire,
 ) -> Metrics:
     """Compute the usual GA metrics that one can retrieve
     from a GA repertoire.
@@ -74,7 +75,7 @@ def default_ga_metrics(
 
 
 def default_nsga2_metrics(
-    repertoire: NSGA2Repertoire,
+        repertoire: NSGA2Repertoire,
 ) -> Metrics:
     """Compute the usual NSGA-II metrics that one can retrieve
     from a NSGA-II repertoire.
@@ -127,12 +128,12 @@ def default_qd_metrics(repertoire: MapElitesRepertoire, qd_offset: float) -> Met
 
 
 def qd_metrics_with_bi_tracking(
-    repertoire: MapElitesRepertoire,
-    qd_offset: float,
-    centroids1: jnp.ndarray,
-    centroids2: jnp.ndarray,
-    descriptors_indexes1: jnp.ndarray,
-    descriptors_indexes2: jnp.ndarray
+        repertoire: MapElitesRepertoire,
+        qd_offset: float,
+        centroids1: jnp.ndarray,
+        centroids2: jnp.ndarray,
+        descriptors_indexes1: jnp.ndarray,
+        descriptors_indexes2: jnp.ndarray
 ) -> Metrics:
     def _compute_coverage(full_descriptors: jnp.ndarray,
                           centroids: jnp.ndarray,
@@ -167,8 +168,24 @@ def default_biqd_metrics(bi_repertoire: MapElitesBiRepertoire, qd_offset: float)
     }
 
 
+def default_triqd_metrics(tri_repertoire: MapElitesTriRepertoire, qd_offset: float) -> Metrics:
+    qd_metrics1 = default_qd_metrics(tri_repertoire.repertoire1, qd_offset)
+    qd_metrics2 = default_qd_metrics(tri_repertoire.repertoire2, qd_offset)
+    qd_metrics3 = default_qd_metrics(tri_repertoire.repertoire3, qd_offset)
+
+    return {
+        "qd_score1": qd_metrics1["qd_score"],
+        "coverage1": qd_metrics1["coverage"],
+        "qd_score2": qd_metrics2["qd_score"],
+        "coverage2": qd_metrics2["coverage"],
+        "qd_score3": qd_metrics3["qd_score"],
+        "coverage3": qd_metrics3["coverage"],
+        "max_fitness": qd_metrics1["max_fitness"],
+    }
+
+
 def default_moqd_metrics(
-    repertoire: MOMERepertoire, reference_point: jnp.ndarray
+        repertoire: MOMERepertoire, reference_point: jnp.ndarray
 ) -> Metrics:
     """Compute the MOQD metric given a MOME repertoire and a reference point.
 
