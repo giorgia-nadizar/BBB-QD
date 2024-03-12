@@ -157,7 +157,8 @@ def run_body_evo_ga(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     seeds = range(10)
-    controllers = ["local", "global"]
+    # controllers = ["local", "global"]
+    controllers = ["local2"]
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
@@ -182,6 +183,7 @@ if __name__ == '__main__':
         "skip": 5,
         "grid_size": 5,
         "fixed_body": False,
+        "observation_range": 2
     }
 
     counter = 0
@@ -190,7 +192,8 @@ if __name__ == '__main__':
             counter += 1
             cfg = copy.deepcopy(base_cfg)
             cfg["seed"] = seed
-            cfg["controller"] = controller
+            cfg["controller"] = controller.replace("2", "")
             cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}_{controller}"
-            print(f"{counter}/{len(seeds) * len(controllers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, {controller}, {seed}")
+            print(
+                f"{counter}/{len(seeds) * len(controllers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, {controller}, {seed}")
             run_body_evo_ga(cfg)

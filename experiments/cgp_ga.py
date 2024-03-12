@@ -9,6 +9,8 @@ import jax
 import jax.numpy as jnp
 from typing import Tuple, Dict, Any
 
+import yaml
+
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller
 from bbbqd.wrappers import make_env
@@ -137,19 +139,20 @@ def run_ga(config: Dict[str, Any]):
 
     os.makedirs(f"../results/{name}/", exist_ok=True)
     repertoire.save(f"../results/{name}/")
+    with open(f"../results/{name}/config.yaml", "w") as file:
+        yaml.dump(config, file)
 
 
 if __name__ == '__main__':
     bodies = {
-        # "biped-3x2": [[3, 3, 3], [3, 0, 3]],
-        # "biped-4x3": [[3, 3, 3, 3], [3, 3, 3, 3], [3, 0, 0, 3]],
         "biped-5x4": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 0, 3, 3], [3, 3, 0, 3, 3]],
         "worm-5x2": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3]],
         "tripod-5x5": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 0, 3, 0, 3], [3, 0, 3, 0, 3], [3, 0, 3, 0, 3]],
         "block-5x5": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3]]
     }
     seeds = range(10)
-    controllers = ["local", "global"]
+    # controllers = ["local", "global"]
+    controllers = ["local2"]
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
@@ -166,6 +169,7 @@ if __name__ == '__main__':
             "observe_voxel_vel": True,
             "observe_voxel_volume": True,
             "observe_time": False,
+            "observation_range": 2
         },
         "jax": True,
         "program_wrapper": True,
@@ -180,7 +184,7 @@ if __name__ == '__main__':
                 counter += 1
                 cfg = copy.deepcopy(base_cfg)
                 cfg["body"] = bodies[body_name]
-                cfg["controller"] = controller
+                cfg["controller"] = controller.replace("2", "")
                 cfg["run_name"] = f"{body_name}_{controller}"
                 cfg["seed"] = seed
                 print(f"{counter}/{len(seeds) * len(bodies) * len(controllers)} -> {body_name}, {controller}, {seed}")
