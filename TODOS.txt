@@ -4,8 +4,6 @@ DEVELOPMENT
 - (opt.) refactor multi-archive ME to reduce code duplication
 
 RUNS
-0. (wait termination + results) run brain optimization only (global/local controller)
-1. (wait termination + results) run body-brain GA (5x5 grid for body)
 2. run body-brain ME (brain descriptors -> body descriptors -> behavior descriptors)
     - centroids generation script
     - load centroids for brain
