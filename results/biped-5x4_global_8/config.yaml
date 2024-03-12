@@ -19,23 +19,7 @@ body:
   - 0
   - 3
   - 3
-buffer_size: &id002 !!python/object/apply:numpy.core.multiarray.scalar
-- &id001 !!python/object/apply:numpy.dtype
-  args:
-  - i8
-  - false
-  - true
-  state: !!python/tuple
-  - 3
-  - <
-  - null
-  - null
-  - null
-  - -1
-  - -1
-  - 0
-- !!binary |
-  agAAAAAAAAA=
+buffer_size: 106
 controller: global
 env_name: Walker-v0
 episode_length: 200
@@ -45,33 +29,21 @@ flags:
   observe_time: false
   observe_voxel_vel: true
   observe_voxel_volume: true
-genome_size: !!python/object/apply:numpy.core.multiarray.scalar
-- *id001
-- !!binary |
-  qAAAAAAAAAA=
+genome_size: 168
 jax: true
 n_constants: 2
 n_functions: 14
-n_in: !!python/object/apply:numpy.core.multiarray.scalar
-- *id001
-- !!binary |
-  OAAAAAAAAAA=
-n_in_env: !!python/object/apply:numpy.core.multiarray.scalar
-- *id001
-- !!binary |
-  NgAAAAAAAAA=
+n_in: 56
+n_in_env: 54
 n_iterations: 500
 n_nodes: 50
-n_out: !!python/object/apply:numpy.core.multiarray.scalar
-- *id001
-- !!binary |
-  EgAAAAAAAAA=
+n_out: 18
 p_mut_functions: 0.1
 p_mut_inputs: 0.1
 p_mut_outputs: 0
 parents_size: 45
 pop_size: 50
-program_state_size: *id002
+program_state_size: 106
 program_wrapper: true
 run_name: biped-5x4_global
 seed: 8
