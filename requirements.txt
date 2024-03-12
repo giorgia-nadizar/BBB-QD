@@ -24,6 +24,7 @@ pybind11==2.9.0
 pygifsicle==1.0.5
 PyOpenGL==3.1.5
 PyOpenGL-accelerate==3.1.5
+pyyaml~=6.0.1
 protobuf==3.19.4
 scikit-learn==1.0.2
 scipy==1.8.0
