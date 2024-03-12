@@ -1,5 +1,6 @@
 from typing import Dict
 
+import numpy
 from brax.envs import Env
 
 from qdax import environments
@@ -30,5 +31,10 @@ def update_config(config: Dict, env: Env = None) -> Dict:
 
     if config.get("symmetry", False):
         config["program_state_size"] = config["program_state_size"] * 2
+
+    for key in config.keys():
+        value = config[key]
+        if isinstance(value, numpy.int64):
+            config[key] = value.item()
 
     return config
