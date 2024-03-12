@@ -53,3 +53,14 @@ To test your installation was successful you can run `examples/install_tester.py
 `evogym` are properly installed. This script will print a bunch of arrays.
 
 Otherwise, you can run `examples/viz_tester.py`, which will launch an evogym simulation and its visualization.
+
+
+## Experiments, results, videos
+The folder `experiments` contains the code for running all the experiments performed so far.
+Namely, `cgp_ga.py` evolves a CGP controller with both global and modular controllers for 4 fixed bodies.
+Instead, `cgp_body_ga.py` evolves the body-within a 5x5 grid-and the CGP controller for both global and modular
+controllers.
+
+The analysis of results is in the folder `analysis`, in the `preliminary.ipynb` notebook.
+
+Some videos of evolved robots are available in the `videos` folder.
