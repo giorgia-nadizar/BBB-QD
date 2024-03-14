@@ -12,7 +12,7 @@ def evaluate_controller_and_body(controller: Union[Controller, ControllerWrapper
                                  body: Union[np.ndarray, None],
                                  config: Dict[str, Any],
                                  render: bool = False) -> float:
-    if not has_actuator(body):
+    if body is not None and not has_actuator(body):
         print("Body with no actuator, negative infinity fitness.")
         return -np.infty
 
