@@ -1,0 +1,57 @@
+body:
+- - 3
+  - 3
+  - 3
+  - 3
+  - 3
+- - 3
+  - 3
+  - 3
+  - 3
+  - 3
+- - 3
+  - 0
+  - 3
+  - 0
+  - 3
+- - 3
+  - 0
+  - 3
+  - 0
+  - 3
+- - 3
+  - 0
+  - 3
+  - 0
+  - 3
+buffer_size: 127
+controller: local
+env_name: Walker-v0
+episode_length: 200
+fixed_body: true
+fixed_outputs: true
+flags:
+  observation_range: 2
+  observe_time: false
+  observe_voxel_vel: true
+  observe_voxel_volume: true
+genome_size: 151
+jax: true
+n_constants: 2
+n_functions: 14
+n_in: 77
+n_in_env: 75
+n_iterations: 500
+n_nodes: 50
+n_out: 1
+p_mut_functions: 0.1
+p_mut_inputs: 0.1
+p_mut_outputs: 0
+parents_size: 45
+pop_size: 50
+program_state_size: 127
+program_wrapper: true
+run_name: tripod-5x5_local2
+seed: 6
+skip: 5
+solver: cgp
