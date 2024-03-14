@@ -177,13 +177,13 @@ if __name__ == '__main__':
             "observe_voxel_vel": True,
             "observe_voxel_volume": True,
             "observe_time": False,
+            "observation_range": 2
         },
         "jax": True,
         "program_wrapper": True,
         "skip": 5,
         "grid_size": 5,
         "fixed_body": False,
-        "observation_range": 2
     }
 
     counter = 0
