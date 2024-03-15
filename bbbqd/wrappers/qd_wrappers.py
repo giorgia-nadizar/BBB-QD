@@ -11,10 +11,7 @@ def get_descriptors_extractor_function(descriptors: List[str]) -> Callable[[Dict
         assert descriptor in existing_descriptors
 
     def _descriptors_extractor(info: Dict[str, Any]) -> np.ndarray:
-        descriptors_values = []
-        for descriptor in descriptors:
-            descriptors_values.extend(info[descriptor])
-        return np.asarray(descriptors_values)
+        return np.concatenate([info[d] for d in descriptors])
 
     return _descriptors_extractor
 
