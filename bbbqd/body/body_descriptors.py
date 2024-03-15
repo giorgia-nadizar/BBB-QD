@@ -63,7 +63,7 @@ def relative_width_height(body: np.ndarray) -> Tuple[float, float]:
     return width / body.shape[0], height / body.shape[1]
 
 
-def elongation(body: np.ndarray, n_directions: int = 8) -> float:
+def elongation(body: np.ndarray, n_directions: int = 20) -> float:
     if n_directions <= 0:
         raise ValueError("n_directions must be positive")
     diameters = []
@@ -71,7 +71,6 @@ def elongation(body: np.ndarray, n_directions: int = 8) -> float:
     x_coordinates = coordinates[0]
     y_coordinates = coordinates[1]
     for i in range(n_directions):
-        # TODO are we sure? how many directions do we need?
         theta = i * 2 * np.pi / n_directions
         rotated_x_coordinates = x_coordinates * np.cos(theta) - y_coordinates * np.sin(theta)
         rotated_y_coordinates = x_coordinates * np.sin(theta) + y_coordinates * np.cos(theta)
