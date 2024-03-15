@@ -1,19 +1,7 @@
-from typing import Tuple, List, Any, Callable, Dict
+from typing import Tuple
 
 import gym
-import numpy as np
 from gym.core import ActType, ObsType
-
-
-def get_descriptors_extractor_function(descriptors: List[str]) -> Callable[[Dict[str, Any]], np.ndarray]:
-    existing_descriptors = ["velocity", "position"]
-    for descriptor in descriptors:
-        assert descriptor in existing_descriptors
-
-    def _descriptors_extractor(info: Dict[str, Any]) -> np.ndarray:
-        return np.concatenate([info[d] for d in descriptors])
-
-    return _descriptors_extractor
 
 
 class CenterVelocityWrapper(gym.Wrapper):
