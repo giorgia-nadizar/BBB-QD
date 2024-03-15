@@ -184,6 +184,10 @@ if __name__ == '__main__':
                 cfg = copy.deepcopy(base_cfg)
                 cfg["body"] = bodies[body_name]
                 cfg["controller"] = controller.replace("2", "")
+                if "2" in controller:
+                    cfg["flags"]["observation_range"] = 2
+                else:
+                    cfg["flags"]["observation_range"] = 1
                 cfg["run_name"] = f"{body_name}_{controller}"
                 cfg["seed"] = seed
                 print(f"{counter}/{len(seeds) * len(bodies) * len(controllers)} -> {body_name}, {controller}, {seed}")

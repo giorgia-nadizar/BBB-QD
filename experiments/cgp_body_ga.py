@@ -191,6 +191,10 @@ if __name__ == '__main__':
             cfg["seed"] = seed
             cfg["controller"] = controller.replace("2", "")
             cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}_{controller}"
+            if "2" in controller:
+                cfg["flags"]["observation_range"] = 2
+            else:
+                cfg["flags"]["observation_range"] = 1
             print(
                 f"{counter}/{len(seeds) * len(controllers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, "
                 f"{controller}, {seed}")
