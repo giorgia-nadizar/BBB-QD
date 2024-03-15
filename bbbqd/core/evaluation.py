@@ -1,4 +1,4 @@
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, Callable, Tuple
 
 import numpy as np
 
@@ -7,11 +7,11 @@ from bbbqd.brain.controllers import ControllerWrapper, Controller
 from bbbqd.wrappers import make_env
 
 
-# TODO: will also provide descriptors
 def evaluate_controller_and_body(controller: Union[Controller, ControllerWrapper],
                                  body: Union[np.ndarray, None],
                                  config: Dict[str, Any],
-                                 render: bool = False) -> float:
+                                 descriptors_extractor: Callable[[Dict[str, Any]], np.ndarray] = None,
+                                 render: bool = False) -> Union[Tuple[float, np.ndarray], float]:
     if body is not None and not has_actuator(body):
         print("Body with no actuator, negative infinity fitness.")
         return -np.infty
@@ -19,9 +19,12 @@ def evaluate_controller_and_body(controller: Union[Controller, ControllerWrapper
     env = make_env(config, body)
     cumulative_reward = 0
     obs = env.reset()
+    descriptors = []
     for _ in range(config["episode_length"]):
         action = controller.compute_action(obs)
         obs, reward, done, info = env.step(action)
+        if descriptors_extractor is not None:
+            descriptors.append(descriptors_extractor(info))
         cumulative_reward += reward
         if render:
             env.render()
@@ -29,10 +32,14 @@ def evaluate_controller_and_body(controller: Union[Controller, ControllerWrapper
             break
 
     env.close()
-    return cumulative_reward
+    if descriptors_extractor is None:
+        return cumulative_reward
+    else:
+        return cumulative_reward, np.asarray(descriptors)
 
 
 def evaluate_controller(controller: Union[Controller, ControllerWrapper],
                         config: Dict[str, Any],
-                        render: bool = False) -> float:
-    return evaluate_controller_and_body(controller, None, config, render)
+                        descriptors_extractor: Callable[[Dict[str, Any]], np.ndarray] = None,
+                        render: bool = False) -> Union[Tuple[float, np.ndarray], float]:
+    return evaluate_controller_and_body(controller, None, config, descriptors_extractor, render)
