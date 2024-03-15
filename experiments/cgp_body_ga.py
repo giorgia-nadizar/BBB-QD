@@ -9,11 +9,9 @@ import jax
 import jax.numpy as jnp
 from typing import Tuple, Dict, Any
 
-import numpy as np
-
 from bbbqd.body.bodies import encode_body
 from bbbqd.brain.controllers import compute_controller_generation_fn
-from bbbqd.core.evaluation import evaluate_controller, evaluate_controller_and_body
+from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.wrappers import make_env
 from qdax.baselines.genetic_algorithm import GeneticAlgorithm
 from qdax.core.emitters.standard_emitters import MixingEmitter
@@ -157,8 +155,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     seeds = range(10)
-    # controllers = ["local", "global"]
-    controllers = ["local2"]
+    controllers = ["global", "local", "local2"]
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
@@ -195,5 +192,6 @@ if __name__ == '__main__':
             cfg["controller"] = controller.replace("2", "")
             cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}_{controller}"
             print(
-                f"{counter}/{len(seeds) * len(controllers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, {controller}, {seed}")
+                f"{counter}/{len(seeds) * len(controllers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, "
+                f"{controller}, {seed}")
             run_body_evo_ga(cfg)

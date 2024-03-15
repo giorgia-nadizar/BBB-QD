@@ -151,8 +151,7 @@ if __name__ == '__main__':
         "block-5x5": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3]]
     }
     seeds = range(10)
-    # controllers = ["local", "global"]
-    controllers = ["local2"]
+    controllers = ["global", "local", "local2"]
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
