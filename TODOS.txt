@@ -5,10 +5,11 @@ DEVELOPMENT
 
 RUNS
 2. run body-brain ME (brain descriptors -> body descriptors -> behavior descriptors)
-    - centroids generation script
     - load centroids for brain
     - de-jax ME
 3. choose descriptors
     - (implemented already) body: - elongation vs n voxels (if variable size body)
             - elongation vs compactness (if fixed size, 10 voxels)
-    - behavior: - take inspiration from VSR code
+    - behavior: - index of half energy in fft of two signals (with capping)
+            - module of velocity and angle of robot
+            - vx and vy in polar coordinates (angle and module)
