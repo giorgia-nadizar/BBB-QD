@@ -1,21 +1,15 @@
 from functools import partial
 from pathlib import Path
-from typing import Dict
 
 import cv2
-import gym
-import evogym.envs
 import numpy as np
 import yaml
-from jax import random
 import jax.numpy as jnp
 
 from bbbqd.body.bodies import encode_body
 from bbbqd.brain.controllers import compute_controller_generation_fn
-from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.wrappers import make_env
 from qdax.core.gp.encoding import compute_encoding_function
-from qdax.core.gp.utils import update_config
 
 
 def make_video(folder: str, render: bool = True, video_file_name: str = None):
