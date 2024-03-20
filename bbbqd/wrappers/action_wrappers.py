@@ -58,7 +58,7 @@ class LocalActionWrapper(ActionWrapper):
         if self.rl:
             reward = np.array([reward] * self.active_voxels.sum())
             done = np.array([done] * self.active_voxels.sum())
-        info = [info] * self.active_voxels.sum()
+        # info = [info] * self.active_voxels.sum()
         return obs, reward, done, info
 
 
