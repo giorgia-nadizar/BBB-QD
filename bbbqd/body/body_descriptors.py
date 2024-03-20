@@ -4,7 +4,7 @@ from typing import Tuple, Dict, Callable
 from qdax.types import Descriptor
 
 
-def _single_body_descriptor_extractor(config: Dict) -> Tuple[Callable[[np.ndarray], Descriptor], int]:
+def get_body_descriptor_extractor(config: Dict) -> Tuple[Callable[[np.ndarray], Descriptor], int]:
     body_descriptors = config["body_descriptors"]
     if not isinstance(body_descriptors, list):
         body_descriptors = [body_descriptors]

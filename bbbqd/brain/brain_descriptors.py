@@ -27,4 +27,5 @@ def get_graph_descriptor_extractor(config: Dict) -> Tuple[Callable[[Genotype], D
                                                     descriptors_indexes=descr_indexes)
     else:
         raise ValueError("Solver must be either cgp or lgp.")
-    return vmap(single_genome_descriptor_function), len(descr_indexes)
+    # return vmap(single_genome_descriptor_function), len(descr_indexes)
+    return single_genome_descriptor_function, len(descr_indexes)
