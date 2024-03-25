@@ -58,7 +58,7 @@ class TriMAPElites(MAPElites):
         self._descriptors_indexes3 = descriptors_indexes3
         self._sampling_id_function = sampling_id_function
 
-    @partial(jax.jit, static_argnames=("self",))
+    # @partial(jax.jit, static_argnames=("self",))
     def init(
             self,
             init_genotypes: Genotype,
@@ -103,7 +103,7 @@ class TriMAPElites(MAPElites):
 
         return tri_repertoire, emitter_state, random_key
 
-    @partial(jax.jit, static_argnames=("self",))
+    # @partial(jax.jit, static_argnames=("self",))
     def update(
             self,
             tri_repertoire: MapElitesTriRepertoire,
