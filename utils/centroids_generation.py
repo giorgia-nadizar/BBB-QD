@@ -30,7 +30,7 @@ def compute_centroids(
     else:
         random_key, subkey = jax.random.split(random_key)
         xs = jax.random.uniform(key=subkey,
-                                shape=(3 * n_init_cvt_samples, 4),
+                                shape=(3 * n_init_cvt_samples, n_descriptors),
                                 minval=min_value,
                                 maxval=max_value)
         samples_list = []
@@ -48,16 +48,31 @@ def compute_centroids(
 
 if __name__ == '__main__':
     rnd_key = jax.random.PRNGKey(0)
-    example_square_centroids, rnd_key = compute_centroids(
+
+    body_centroids, rnd_key = compute_centroids(
         random_key=rnd_key,
         n_descriptors=2,
         min_value=0.,
-        max_value=1
+        max_value=1.
     )
-    example_triangular_centroids, rnd_key = compute_centroids(
+    jnp.save("../experiments/data/body_centroids.npy", body_centroids)
+    print("body centroids")
+
+    behavior_centroids, rnd_key = compute_centroids(
+        random_key=rnd_key,
+        n_descriptors=2,
+        min_value=0.,
+        max_value=1.
+    )
+    jnp.save("../experiments/data/behavior_centroids.npy", behavior_centroids)
+    print("behavior centroids")
+
+    brain_centroids, rnd_key = compute_centroids(
         random_key=rnd_key,
         n_descriptors=2,
         min_value=jnp.zeros(2),
-        max_value=jnp.zeros(2),
+        max_value=jnp.ones(2),
         samples_condition=lambda arr: arr[0] + arr[1] <= 1
     )
+    jnp.save("../experiments/data/brain_centroids.npy", brain_centroids)
+    print("brain centroids")
