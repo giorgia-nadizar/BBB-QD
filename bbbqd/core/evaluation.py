@@ -16,7 +16,7 @@ def evaluate_controller_and_body(controller: Union[Controller, ControllerWrapper
                                  render: bool = False) -> Union[Tuple[float, np.ndarray], float]:
     if body is not None and not has_actuator(body):
         print("Body with no actuator, negative infinity fitness.")
-        return -np.infty
+        return -np.infty if descriptors_functions is None else -np.infty, np.asarray([0., 0.])
 
     env = make_env(config, body)
     cumulative_reward = 0
