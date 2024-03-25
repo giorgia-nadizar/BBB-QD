@@ -7,3 +7,26 @@ def _compute_spectrum(signal: np.ndarray) -> np.ndarray:
     half_fft = abs_fft[:int(len(signal) / 2) + 1]
     return half_fft
 
+
+def _compute_spectra(signal: np.ndarray) -> np.ndarray:
+    return np.asarray([_compute_spectrum(signal[:, i]) for i in range(signal.shape[1])])
+
+
+def _signal_peak(signal: np.ndarray, ignore_continuous_component: bool = False) -> float:
+    if ignore_continuous_component:
+        signal = signal[1:len(signal)]
+    return np.argmax(signal) / len(signal)
+
+
+def _signal_median(signal: np.ndarray, ignore_continuous_component: bool = False) -> float:
+    if ignore_continuous_component:
+        signal = signal[1:len(signal)]
+    total_sum = np.sum(signal)
+    first_sum = 0
+    median_idx = len(signal - 1)
+    for idx, value in enumerate(signal):
+        first_sum += value
+        if first_sum > (total_sum / 2):
+            median_idx = idx
+            break
+    return median_idx / len(signal)

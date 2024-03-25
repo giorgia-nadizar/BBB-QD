@@ -37,7 +37,7 @@ def evaluate_controller_and_body(controller: Union[Controller, ControllerWrapper
     if descriptors_functions is None:
         return cumulative_reward
     else:
-        return cumulative_reward, descriptors_functions[1](np.asarray(descriptors).transpose())
+        return cumulative_reward, descriptors_functions[1](np.asarray(descriptors))
 
 
 def evaluate_controller(controller: Union[Controller, ControllerWrapper],
