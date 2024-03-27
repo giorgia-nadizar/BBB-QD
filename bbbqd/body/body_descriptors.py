@@ -39,8 +39,10 @@ def get_body_descriptor_extractor(config: Dict) -> Tuple[Callable[[np.ndarray], 
 def _bounding_box_limits(body: np.ndarray) -> Tuple[int, int, int, int]:
     rows = np.any(body, axis=1)
     cols = np.any(body, axis=0)
-    y_min, y_max = np.where(rows)[0][[0, -1]]
-    x_min, x_max = np.where(cols)[0][[0, -1]]
+    ys = np.where(rows)[0]
+    xs = np.where(cols)[0]
+    y_min, y_max = 0, 0 if len(ys) == 0 else ys[[0, -1]]
+    x_min, x_max = 0, 0 if len(xs) == 0 else xs[[0, -1]]
 
     return x_min, x_max, y_min, y_max
 
