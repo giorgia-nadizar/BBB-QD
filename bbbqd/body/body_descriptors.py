@@ -15,13 +15,13 @@ def get_body_descriptor_extractor(config: Dict) -> Tuple[Callable[[np.ndarray], 
             descriptor.append(n_voxels(body))
         if "relative_size" in body_descriptors:
             descriptor.append(relative_size(body))
-        if "width" or "height" in body_descriptors:
+        if "width" in body_descriptors or "height" in body_descriptors:
             width, height = width_height(body)
             if "width" in body_descriptors:
                 descriptor.append(width)
             if "height" in body_descriptors:
                 descriptor.append(height)
-        if "relative_width" or "relative_height" in body_descriptors:
+        if "relative_width" in body_descriptors or "relative_height" in body_descriptors:
             relative_width, relative_height = relative_width_height(body)
             if "relative_width" in body_descriptors:
                 descriptor.append(relative_width)
