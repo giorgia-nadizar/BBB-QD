@@ -72,6 +72,8 @@ def elongation(body: np.ndarray, n_directions: int = 20) -> float:
     coordinates = np.where(body.transpose() > 0)
     x_coordinates = coordinates[0]
     y_coordinates = coordinates[1]
+    if len(x_coordinates) == 0 or len(y_coordinates) == 0:
+        return 0.0
     for i in range(n_directions):
         theta = i * 2 * np.pi / n_directions
         rotated_x_coordinates = x_coordinates * np.cos(theta) - y_coordinates * np.sin(theta)
@@ -86,6 +88,8 @@ def elongation(body: np.ndarray, n_directions: int = 20) -> float:
 
 def compactness(body: np.ndarray) -> float:
     convex_hull = body > 0
+    if True not in convex_hull:
+        return 0.0
     new_found = True
     while new_found:
         new_found = False
