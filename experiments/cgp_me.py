@@ -234,5 +234,6 @@ if __name__ == '__main__':
             cfg["seed"] = seed
             cfg["sampler"] = sampler
             cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-me-{sampler}"
-            print(f"{counter}/{len(seeds)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, {seed}, {sampler}")
+            print(f"{counter}/{len(seeds) * len(samplers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']},"
+                  f" {seed}, {sampler}")
             run_body_evo_me(cfg)
