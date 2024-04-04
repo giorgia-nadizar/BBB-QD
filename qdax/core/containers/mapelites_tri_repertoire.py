@@ -23,7 +23,7 @@ class MapElitesTriRepertoire(flax.struct.PyTreeNode):
     def save(self, path: str = "/.") -> None:
         self.repertoire1.save(f"{path}r1_")
         self.repertoire2.save(f"{path}r2_")
-        self.repertoire2.save(f"{path}r3_")
+        self.repertoire3.save(f"{path}r3_")
         jnp.save(path + "descriptors_indexes1.npy", self.descriptors_indexes1)
         jnp.save(path + "descriptors_indexes2.npy", self.descriptors_indexes2)
         jnp.save(path + "descriptors_indexes3.npy", self.descriptors_indexes3)
