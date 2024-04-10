@@ -193,7 +193,7 @@ def run_body_evo_me(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     seeds = range(10)
-    samplers = ["all"]  # , "s1", "s2", "s3"]
+    samplers = ["all", "s1", "s2", "s3"]
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
