@@ -155,6 +155,38 @@ def qd_metrics_with_bi_tracking(
     return metrics
 
 
+def qd_metrics_with_tri_tracking(
+        repertoire: MapElitesRepertoire,
+        qd_offset: float,
+        centroids1: jnp.ndarray,
+        centroids2: jnp.ndarray,
+        centroids3: jnp.ndarray,
+        descriptors_indexes1: jnp.ndarray,
+        descriptors_indexes2: jnp.ndarray,
+        descriptors_indexes3: jnp.ndarray
+) -> Metrics:
+    def _compute_coverage(full_descriptors: jnp.ndarray,
+                          centroids: jnp.ndarray,
+                          descriptors_indexes: jnp.ndarray
+                          ) -> jnp.ndarray:
+        descriptors = full_descriptors.take(descriptors_indexes, axis=1)
+        indices = get_cells_indices(descriptors, centroids)
+        binary_array = jnp.where(jnp.isin(jnp.arange(len(centroids)), indices), 1, 0)
+        return 100 * jnp.sum(binary_array) / len(centroids)
+
+    # get metrics
+    coverage1 = _compute_coverage(repertoire.descriptors, centroids1, descriptors_indexes1)
+    coverage2 = _compute_coverage(repertoire.descriptors, centroids2, descriptors_indexes2)
+    coverage3 = _compute_coverage(repertoire.descriptors, centroids3, descriptors_indexes3)
+
+    metrics = default_qd_metrics(repertoire, qd_offset)
+    metrics["coverage1"] = coverage1
+    metrics["coverage2"] = coverage2
+    metrics["coverage3"] = coverage3
+
+    return metrics
+
+
 def default_biqd_metrics(bi_repertoire: MapElitesBiRepertoire, qd_offset: float) -> Metrics:
     qd_metrics1 = default_qd_metrics(bi_repertoire.repertoire1, qd_offset)
     qd_metrics2 = default_qd_metrics(bi_repertoire.repertoire2, qd_offset)
