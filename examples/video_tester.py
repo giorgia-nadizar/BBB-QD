@@ -12,12 +12,15 @@ from bbbqd.wrappers import make_env
 from qdax.core.gp.encoding import compute_encoding_function
 
 
-def make_video(folder: str, render: bool = True, video_file_name: str = None):
+def make_video(folder: str, render: bool = True, video_file_name: str = None, extra_prefix: str = "") -> None:
     config = yaml.safe_load(Path(f"{folder}/config.yaml").read_text())
 
     # Load fitnesses and genotypes
-    fitnesses = jnp.load(f"{folder}/scores.npy")
-    genotypes = jnp.load(f"{folder}/genotypes.npy")
+    try:
+        fitnesses = jnp.load(f"{folder}/{extra_prefix}scores.npy")
+    except FileNotFoundError:
+        fitnesses = jnp.load(f"{folder}/{extra_prefix}fitnesses.npy")
+    genotypes = jnp.load(f"{folder}/{extra_prefix}genotypes.npy")
 
     # Find best
     genome = genotypes[jnp.argmax(fitnesses)].astype(int)
@@ -70,12 +73,23 @@ def make_video(folder: str, render: bool = True, video_file_name: str = None):
 
 if __name__ == '__main__':
     seed = 0
+
+    # ga videos
     body_names = ["biped-5x4", "worm-5x2", "tripod-5x5", "block-5x5", "evo-body-5x5"]
     controller_names = ["global", "local"]
-
     for body_name in body_names:
         for controller_name in controller_names:
             results_path = f"../results/{body_name}_{controller_name}_{seed}"
             video_file_path = f"../videos/{body_name}_{controller_name}_{seed}.avi"
             print(f"{body_name}, {controller_name}")
             make_video(results_path, render=False, video_file_name=video_file_path)
+
+    # me videos
+    base_info = "evo-body-5x5-me"
+    for sampler in ["all", "s1", "s2", "s3"]:
+        for rep in range(3):
+            extra_prefix = f"r{rep + 1}_"
+            results_path = f"../results/{base_info}-{sampler}_{seed}"
+            video_file_path = f"../videos/{base_info}-{sampler}_{seed}_r{rep + 1}.avi"
+            print(f"{sampler}, {rep}")
+            make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix=extra_prefix)
