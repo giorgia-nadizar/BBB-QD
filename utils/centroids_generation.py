@@ -76,3 +76,13 @@ if __name__ == '__main__':
     )
     jnp.save("../experiments/data/brain_centroids.npy", brain_centroids)
     print("brain centroids")
+
+    global_centroids, rnd_key = compute_centroids(
+        random_key=rnd_key,
+        n_descriptors=6,
+        min_value=jnp.zeros(6),
+        max_value=jnp.ones(6),
+        samples_condition=lambda arr: arr[0] + arr[1] <= 1
+    )
+    jnp.save("../experiments/data/global_centroids.npy", global_centroids)
+    print("global centroids")
