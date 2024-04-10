@@ -23,9 +23,9 @@ from qdax.core.gp.encoding import compute_encoding_function
 from qdax.core.gp.individual import compute_genome_mask, compute_mutation_mask, generate_population, \
     compute_mutation_fn, compute_variation_mutation_fn
 from qdax.core.gp.utils import update_config
-from qdax.core.tri_map_elites import TriMAPElites, sampling_function
+from qdax.core.map_elites import MAPElites
 from qdax.types import RNGKey, Fitness, ExtraScores, Descriptor
-from qdax.utils.metrics import CSVLogger, default_triqd_metrics
+from qdax.utils.metrics import CSVLogger, qd_metrics_with_tri_tracking
 
 
 # This is a placeholder class, all local functions will be added as its attributes
@@ -133,35 +133,34 @@ def run_body_evo_me(config: Dict[str, Any]):
         batch_size=config["parents_size"]
     )
 
-    # Sampling function
-    sampling_id_fn = sampling_function(config["sampler"])
-
-    tri_qd_metrics = partial(default_triqd_metrics, qd_offset=0)
-    tri_map_elites = TriMAPElites(
-        scoring_function=_qd_scoring_fn,
-        emitter=mixing_emitter,
-        metrics_function=tri_qd_metrics,
-        descriptors_indexes1=jnp.asarray([0, 1]),
-        descriptors_indexes2=jnp.asarray([2, 3]),
-        descriptors_indexes3=jnp.asarray([4, 5]),
-        sampling_id_function=sampling_id_fn
-    )
-
     brain_centroids = jnp.load("data/brain_centroids.npy")
     body_centroids = jnp.load("data/body_centroids.npy")
     behavior_centroids = jnp.load("data/behavior_centroids.npy")
+    global_centroids = jnp.load("data/global_centroids.npy")
+
+    qd_metrics = partial(qd_metrics_with_tri_tracking,
+                         qd_offset=0,
+                         centroids1=brain_centroids,
+                         centroids2=body_centroids,
+                         centroids3=behavior_centroids,
+                         descriptors_indexes1=jnp.asarray([0, 1]),
+                         descriptors_indexes2=jnp.asarray([2, 3]),
+                         descriptors_indexes3=jnp.asarray([4, 5]),
+                         )
+    map_elites = MAPElites(
+        scoring_function=_qd_scoring_fn,
+        emitter=mixing_emitter,
+        metrics_function=qd_metrics,
+    )
 
     # Compute initial repertoire and emitter state
-    repertoire, emitter_state, random_key = tri_map_elites.init(
+    repertoire, emitter_state, random_key = map_elites.init(
         init_genotypes=population,
-        centroids1=brain_centroids,
-        centroids2=body_centroids,
-        centroids3=behavior_centroids,
+        centroids=global_centroids,
         random_key=random_key
     )
 
-    headers = ["iteration", "max_fitness", "qd_score1", "qd_score2", "qd_score3", "coverage1", "coverage2", "coverage3",
-               "time", "current_time"]
+    headers = ["iteration", "max_fitness", "coverage1", "coverage2", "coverage3", "time", "current_time"]
 
     name = f"{config.get('run_name', 'trial')}_{config['seed']}"
 
@@ -173,16 +172,16 @@ def run_body_evo_me(config: Dict[str, Any]):
     for i in range(config["n_iterations"]):
         start_time = time.time()
         # main iterations
-        repertoire, emitter_state, metrics, random_key = tri_map_elites.update(repertoire, emitter_state, random_key)
+        repertoire, emitter_state, metrics, random_key = map_elites.update(repertoire, emitter_state, random_key)
         timelapse = time.time() - start_time
         current_time = datetime.now()
 
         # log metrics
         logged_metrics = {"time": timelapse, "iteration": i + 1, "current_time": current_time,
                           "max_fitness": metrics["max_fitness"],
-                          "qd_score1": metrics["qd_score1"], "coverage1": metrics["coverage1"],
-                          "qd_score2": metrics["qd_score2"], "coverage2": metrics["coverage2"],
-                          "qd_score3": metrics["qd_score3"], "coverage3": metrics["coverage3"]}
+                          "coverage1": metrics["coverage1"],
+                          "coverage2": metrics["coverage2"],
+                          "coverage3": metrics["coverage3"]}
 
         csv_logger.log(logged_metrics)
         print(f"{i}\t{logged_metrics['max_fitness']}")
@@ -193,7 +192,6 @@ def run_body_evo_me(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     seeds = range(10)
-    samplers = ["all", "s1", "s2", "s3"]
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
@@ -218,6 +216,7 @@ if __name__ == '__main__':
         "skip": 5,
         "grid_size": 5,
         "fixed_body": False,
+        "sampler": "me",
 
         # descriptors
         "graph_descriptors": "function_arities",
@@ -228,12 +227,10 @@ if __name__ == '__main__':
 
     counter = 0
     for seed in seeds:
-        for sampler in samplers:
-            counter += 1
-            cfg = copy.deepcopy(base_cfg)
-            cfg["seed"] = seed
-            cfg["sampler"] = sampler
-            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-me-{sampler}"
-            print(f"{counter}/{len(seeds) * len(samplers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']},"
-                  f" {seed}, {sampler}")
-            run_body_evo_me(cfg)
+        counter += 1
+        cfg = copy.deepcopy(base_cfg)
+        cfg["seed"] = seed
+        cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-me-me"
+        print(f"{counter}/{len(seeds)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']},"
+              f" {seed}")
+        run_body_evo_me(cfg)
