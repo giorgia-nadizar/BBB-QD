@@ -49,7 +49,7 @@ class MAPElites:
         self._emitter = emitter
         self._metrics_function = metrics_function
 
-    @partial(jax.jit, static_argnames=("self",))
+    # @partial(jax.jit, static_argnames=("self",))
     def init(
         self,
         init_genotypes: Genotype,
@@ -102,7 +102,7 @@ class MAPElites:
 
         return repertoire, emitter_state, random_key
 
-    @partial(jax.jit, static_argnames=("self",))
+    # @partial(jax.jit, static_argnames=("self",))
     def update(
         self,
         repertoire: MapElitesRepertoire,
