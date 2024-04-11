@@ -10,6 +10,7 @@ import jax.numpy as jnp
 from typing import Tuple, Dict, Any
 
 import numpy as np
+import yaml
 
 from bbbqd.behavior.behavior_utils import get_behavior_descriptors_functions
 from bbbqd.body.bodies import encode_body
@@ -189,6 +190,8 @@ def run_body_evo_me(config: Dict[str, Any]):
 
     os.makedirs(f"../results/{name}/", exist_ok=True)
     repertoire.save(f"../results/{name}/")
+    with open(f"../results/{name}/config.yaml", "w") as file:
+        yaml.dump(config, file)
 
 
 if __name__ == '__main__':

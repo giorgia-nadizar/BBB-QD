@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 import yaml
 import jax.numpy as jnp
+from moviepy.video.compositing.CompositeVideoClip import clips_array
+from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from bbbqd.body.bodies import encode_body
 from bbbqd.brain.controllers import compute_controller_generation_fn
@@ -12,12 +14,15 @@ from bbbqd.wrappers import make_env
 from qdax.core.gp.encoding import compute_encoding_function
 
 
-def make_video(folder: str, render: bool = True, video_file_name: str = None):
+def make_video(folder: str, render: bool = True, video_file_name: str = None, extra_prefix: str = "") -> None:
     config = yaml.safe_load(Path(f"{folder}/config.yaml").read_text())
 
     # Load fitnesses and genotypes
-    fitnesses = jnp.load(f"{folder}/scores.npy")
-    genotypes = jnp.load(f"{folder}/genotypes.npy")
+    try:
+        fitnesses = jnp.load(f"{folder}/{extra_prefix}scores.npy")
+    except FileNotFoundError:
+        fitnesses = jnp.load(f"{folder}/{extra_prefix}fitnesses.npy")
+    genotypes = jnp.load(f"{folder}/{extra_prefix}genotypes.npy")
 
     # Find best
     genome = genotypes[jnp.argmax(fitnesses)].astype(int)
@@ -70,12 +75,31 @@ def make_video(folder: str, render: bool = True, video_file_name: str = None):
 
 if __name__ == '__main__':
     seed = 0
-    body_names = ["biped-5x4", "worm-5x2", "tripod-5x5", "block-5x5", "evo-body-5x5"]
-    controller_names = ["global", "local"]
 
-    for body_name in body_names:
-        for controller_name in controller_names:
-            results_path = f"../results/{body_name}_{controller_name}_{seed}"
-            video_file_path = f"../videos/{body_name}_{controller_name}_{seed}.avi"
-            print(f"{body_name}, {controller_name}")
-            make_video(results_path, render=False, video_file_name=video_file_path)
+    # ga videos
+    # body_names = ["biped-5x4", "worm-5x2", "tripod-5x5", "block-5x5", "evo-body-5x5"]
+    # controller_names = ["global", "local"]
+    # for body_name in body_names:
+    #     for controller_name in controller_names:
+    #         results_path = f"../results/{body_name}_{controller_name}_{seed}"
+    #         video_file_path = f"../videos/{body_name}_{controller_name}_{seed}.avi"
+    #         print(f"{body_name}, {controller_name}")
+    #         make_video(results_path, render=False, video_file_name=video_file_path)
+
+    # me videos
+    base_info = "evo-body-5x5-me"
+    for sampler in ["all", "s1", "s2", "s3"]:
+        extra_prefix = f"r1_"
+        results_path = f"../results/{base_info}-{sampler}_{seed}"
+        video_file_path = f"../videos/{base_info}-{sampler}_{seed}.avi"
+        print(f"{sampler}")
+        make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix=extra_prefix)
+
+    # collage of me videos
+    video_files = []
+    for sampler in ["all", "s1", "s2", "s3"]:
+        video_path = f"../videos/evo-body-5x5-me-{sampler}_{seed}.avi"
+        video_files.append(video_path)
+    video_clips = [VideoFileClip(file) for file in video_files]
+    collage = clips_array([video_clips])
+    collage.write_videofile(f"../videos/evo-body-5x5-me_0.mp4", fps=24, codec='mpeg4')
