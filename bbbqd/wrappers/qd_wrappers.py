@@ -1,6 +1,7 @@
 from typing import Tuple
 
 import gym
+import numpy as np
 from gym.core import ActType, ObsType
 
 
@@ -24,5 +25,7 @@ class CenterAngleWrapper(gym.Wrapper):
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         obs, reward, done, info = super().step(action)
-        info["angle"] = self.env.get_ort_obs("robot")
+        original_angle = self.env.get_ort_obs("robot")
+        angle = original_angle + np.pi if original_angle <= np.pi else original_angle - np.pi
+        info["angle"] = angle
         return obs, reward, done, info
