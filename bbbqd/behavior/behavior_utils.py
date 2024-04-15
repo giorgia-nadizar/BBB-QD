@@ -27,18 +27,29 @@ def _get_descriptors_extractor_function(descriptors: str) -> Callable[[Dict[str,
         descriptors_data = []
         for descriptor in descriptors:
             if descriptor == "velocity_angle":
-                x_y = info["velocity"]
-                descriptors_data.append(np.arctan2(x_y[1], x_y[0]))
+                x_y = info["velocity"].reshape(-1, info["velocity"].shape[-1])
+                velocity_angle = np.arctan2(x_y[:, 1], x_y[:, 0])
+                velocity_angle_later = velocity_angle.reshape(len(velocity_angle), 1)
+                descriptors_data.append(velocity_angle_later)
             elif descriptor == "velocity_module":
-                x_y = info["velocity"]
-                descriptors_data.append(np.sqrt(x_y[0] ** 2 + x_y[1] ** 2))
+                x_y = info["velocity"].reshape(-1, info["velocity"].shape[-1])
+                velocity_module = np.sqrt(x_y[:, 0] ** 2 + x_y[:, 1] ** 2)
+                velocity_module = velocity_module.reshape(len(velocity_module), 1)
+                descriptors_data.append(velocity_module)
             elif "x" in descriptor:
-                descriptors_data.append(info[descriptor.replace("_x", "")][0])
+                descriptor_data = info[descriptor.replace("_x", "")]
+                descriptor_data = descriptor_data.reshape(-1, descriptor_data.shape[-1])
+                descriptor_data_x = descriptor_data[:, 0]
+                descriptors_data.append(descriptor_data_x.reshape(len(descriptor_data_x), 1))
             elif "y" in descriptor:
-                descriptors_data.append(info[descriptor.replace("_y", "")][1])
+                descriptor_data = info[descriptor.replace("_y", "")]
+                descriptor_data = descriptor_data.reshape(-1, descriptor_data.shape[-1])
+                descriptor_data_y = descriptor_data[:, 1]
+                descriptors_data.append(descriptor_data_y.reshape(len(descriptor_data_y), 1))
             else:
-                descriptors_data.extend(info[descriptor].tolist())
-        return np.asarray(descriptors_data)
+                descriptors_data.append(info[descriptor].reshape(-1, info[descriptor].shape[-1]))
+        ddd = np.hstack(descriptors_data)
+        return ddd
 
     return _descriptors_extractor
 

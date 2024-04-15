@@ -9,8 +9,6 @@ class FullWrapper(gym.Wrapper):
     def __init__(self, env: EvoGymBase, skip: int = 0, qd_wrappers: List[str] = None):
         super().__init__(env)
         self.env = ActionSpaceCorrectionWrapper(env)
-        if skip > 0:
-            self.env = ActionSkipWrapper(self.env, skip)
         if qd_wrappers is not None:
             if "velocity" in qd_wrappers:
                 self.env = CenterVelocityWrapper(self.env)
@@ -18,6 +16,8 @@ class FullWrapper(gym.Wrapper):
                 self.env = CenterPositionWrapper(self.env)
             if "angle" in qd_wrappers:
                 self.env = CenterAngleWrapper(self.env)
+        if skip > 0:
+            self.env = ActionSkipWrapper(self.env, skip)
 
 
 class GlobalWrapper(FullWrapper):

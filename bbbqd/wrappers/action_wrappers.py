@@ -1,3 +1,4 @@
+import numpy as np
 from evogym.envs import *
 from gym.core import ObsType
 from typing import Any
@@ -95,9 +96,11 @@ class ActionSkipWrapper(gym.Wrapper):
     def step(self, action: np.ndarray) -> Tuple[ObsType, float, bool, Dict[str, Any]]:
         obs, reward, done, info = None, None, None, None
         total_reward = 0
+        total_info = []
         for _ in range(self.skip):
             obs, reward, done, info = self.env.step(action)
             total_reward += reward
+            total_info.append(info)
             if done:
                 break
-        return obs, total_reward, done, info
+        return obs, total_reward, done, {key: np.asarray([i[key] for i in total_info]) for key in total_info[0]}
