@@ -166,7 +166,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     name = f"{config.get('run_name', 'trial')}_{config['seed']}"
 
     csv_logger = CSVLogger(
-        f"../results/{name}.csv",
+        f"../results/me/{name}.csv",
         header=headers
     )
 
@@ -187,9 +187,9 @@ def run_body_evo_me(config: Dict[str, Any]):
         csv_logger.log(logged_metrics)
         print(f"{i}\t{logged_metrics['max_fitness']}")
 
-    os.makedirs(f"../results/{name}/", exist_ok=True)
-    repertoire.save(f"../results/{name}/")
-    with open(f"../results/{name}/config.yaml", "w") as file:
+    os.makedirs(f"../results/me/{name}/", exist_ok=True)
+    repertoire.save(f"../results/me/{name}/")
+    with open(f"../results/me/{name}/config.yaml", "w") as file:
         yaml.dump(config, file)
 
 
