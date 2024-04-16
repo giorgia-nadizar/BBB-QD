@@ -53,8 +53,8 @@ def _find_candidates(boolean_matrix: np.ndarray) -> np.ndarray:
             if candidates[x][y] == 1:
                 continue
             if boolean_matrix[x][y] == 0 and (
-                    (x - 1 > 0 and boolean_matrix[x - 1][y] == 1) or
-                    (y - 1 > 0 and boolean_matrix[x][y - 1] == 1) or
+                    (x - 1 >= 0 and boolean_matrix[x - 1][y] == 1) or
+                    (y - 1 >= 0 and boolean_matrix[x][y - 1] == 1) or
                     (x + 1 < len(boolean_matrix) and boolean_matrix[x + 1][y] == 1) or
                     (y + 1 < len(boolean_matrix) and boolean_matrix[x][y + 1] == 1)
             ):
@@ -85,8 +85,4 @@ def encode_body_indirectly(body_string: jnp.ndarray, n_elements: int) -> np.ndar
     occupation_grid = np.reshape(np.asarray(occupation_string), (-1, grid_size))
     boolean_occupation_grid = _floating_occupation_to_boolean(occupation_grid, n_elements)
     material_grid = np.reshape(np.asarray(material_string), (-1, grid_size))
-    encoded_body = (boolean_occupation_grid * material_grid).astype(int)
-    grid_body = _remove_not_connected_components(encoded_body)
-    if not np.array_equal(encoded_body, grid_body):
-        print(body_string)
-    return encoded_body
+    return (boolean_occupation_grid * material_grid).astype(int)
