@@ -9,6 +9,8 @@ import jax
 import jax.numpy as jnp
 from typing import Tuple, Dict, Any
 
+import yaml
+
 from bbbqd.body.bodies import encode_body
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
@@ -131,7 +133,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
     name = f"{config.get('run_name', 'trial')}_{config['seed']}"
 
     csv_logger = CSVLogger(
-        f"../results/{name}.csv",
+        f"../results/ga/{name}.csv",
         header=headers
     )
 
@@ -149,8 +151,10 @@ def run_body_evo_ga(config: Dict[str, Any]):
         csv_logger.log(logged_metrics)
         print(f"{i}\t{logged_metrics['max_fitness']}")
 
-    os.makedirs(f"../results/{name}/", exist_ok=True)
-    repertoire.save(f"../results/{name}/")
+    os.makedirs(f"../results/ga/{name}/", exist_ok=True)
+    repertoire.save(f"../results/ga/{name}/")
+    with open(f"../results/ga/{name}/config.yaml", "w") as file:
+        yaml.dump(config, file)
 
 
 if __name__ == '__main__':

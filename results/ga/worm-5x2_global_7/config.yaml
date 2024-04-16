@@ -1,0 +1,41 @@
+body:
+- - 3
+  - 3
+  - 3
+  - 3
+  - 3
+- - 3
+  - 3
+  - 3
+  - 3
+  - 3
+buffer_size: 82
+controller: global
+env_name: Walker-v0
+episode_length: 200
+fixed_body: true
+fixed_outputs: true
+flags:
+  observe_time: false
+  observe_voxel_vel: true
+  observe_voxel_volume: true
+genome_size: 160
+jax: true
+n_constants: 2
+n_functions: 14
+n_in: 32
+n_in_env: 30
+n_iterations: 500
+n_nodes: 50
+n_out: 10
+p_mut_functions: 0.1
+p_mut_inputs: 0.1
+p_mut_outputs: 0
+parents_size: 45
+pop_size: 50
+program_state_size: 82
+program_wrapper: true
+run_name: worm-5x2_global
+seed: 7
+skip: 5
+solver: cgp

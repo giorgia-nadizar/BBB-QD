@@ -119,7 +119,7 @@ def run_ga(config: Dict[str, Any]):
     name = f"{config.get('run_name', 'trial')}_{config['seed']}"
 
     csv_logger = CSVLogger(
-        f"../results/{name}.csv",
+        f"../results/ga/{name}.csv",
         header=headers
     )
 
@@ -137,9 +137,9 @@ def run_ga(config: Dict[str, Any]):
         csv_logger.log(logged_metrics)
         print(f"{i}\t{logged_metrics['max_fitness']}")
 
-    os.makedirs(f"../results/{name}/", exist_ok=True)
-    repertoire.save(f"../results/{name}/")
-    with open(f"../results/{name}/config.yaml", "w") as file:
+    os.makedirs(f"../results/ga/{name}/", exist_ok=True)
+    repertoire.save(f"../results/ga/{name}/")
+    with open(f"../results/ga/{name}/config.yaml", "w") as file:
         yaml.dump(config, file)
 
 
