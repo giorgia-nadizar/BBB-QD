@@ -14,8 +14,8 @@ def _identity(x: Any) -> Any:
 
 
 def levels_back_transformation_function(
-    n_in: int,
-    n_nodes: int
+        n_in: int,
+        n_nodes: int
 ) -> Callable[[jnp.ndarray], jnp.ndarray]:
     def _levels_back_transformation_function(genome: jnp.ndarray) -> jnp.ndarray:
         x_genes, y_genes, other_genes = jnp.split(genome, [n_nodes, 2 * n_nodes])
@@ -27,8 +27,8 @@ def levels_back_transformation_function(
 
 
 def compute_mutation_mask(
-    config: Dict,
-    n_out: int
+        config: Dict,
+        n_out: int
 ) -> jnp.ndarray:
     if config["solver"] == "cgp":
         return _compute_cgp_mutation_mask(config, n_out)
@@ -38,8 +38,8 @@ def compute_mutation_mask(
 
 
 def _compute_cgp_mutation_mask(
-    config: Dict,
-    n_out: int
+        config: Dict,
+        n_out: int
 ) -> jnp.ndarray:
     in_mut_mask = config["p_mut_inputs"] * jnp.ones(config["n_nodes"])
     f_mut_mask = config["p_mut_functions"] * jnp.ones(config["n_nodes"])
@@ -48,7 +48,7 @@ def _compute_cgp_mutation_mask(
 
 
 def _compute_lgp_mutation_mask(
-    config: Dict
+        config: Dict
 ) -> jnp.ndarray:
     n_rows = config["n_rows"]
     lhs_mask = config["p_mut_lhs"] * jnp.ones(n_rows)
@@ -58,9 +58,9 @@ def _compute_lgp_mutation_mask(
 
 
 def compute_genome_mask(
-    config: Dict,
-    n_in: int,
-    n_out: int
+        config: Dict,
+        n_in: int,
+        n_out: int
 ) -> jnp.ndarray:
     if config["solver"] == "cgp":
         return _compute_cgp_genome_mask(config, n_in, n_out)
@@ -70,9 +70,9 @@ def compute_genome_mask(
 
 
 def _compute_cgp_genome_mask(
-    config: Dict,
-    n_in: int,
-    n_out: int
+        config: Dict,
+        n_in: int,
+        n_out: int
 ) -> jnp.ndarray:
     n_nodes = config["n_nodes"]
     if config.get("recursive", False):
@@ -90,8 +90,8 @@ def _compute_cgp_genome_mask(
 
 
 def _compute_lgp_genome_mask(
-    config: Dict,
-    n_in: int
+        config: Dict,
+        n_in: int
 ) -> jnp.ndarray:
     n_rows = config["n_rows"]
     n_registers = config["n_registers"]
@@ -101,11 +101,11 @@ def _compute_lgp_genome_mask(
     return jnp.concatenate((lhs_mask, rhs_mask, rhs_mask, f_mask))
 
 
-def generate_genome(
-    genome_mask: jnp.ndarray,
-    rnd_key: RNGKey,
-    genome_transformation_function: Callable[[jnp.ndarray], jnp.ndarray] = _identity,
-    fixed_trailing: jnp.ndarray = jnp.asarray([])
+def generate_integer_genome(
+        genome_mask: jnp.ndarray,
+        rnd_key: RNGKey,
+        genome_transformation_function: Callable[[jnp.ndarray], jnp.ndarray] = _identity,
+        fixed_trailing: jnp.ndarray = jnp.asarray([])
 ) -> jnp.ndarray:
     float_genome = random.uniform(key=rnd_key, shape=genome_mask.shape)
     integer_genome = jnp.floor(float_genome * genome_mask).astype(int)
@@ -114,15 +114,37 @@ def generate_genome(
     return jnp.concatenate([genome_trail, fixed_trailing]).astype(int)
 
 
+def generate_float_genome(
+        genome_length: int,
+        rnd_key: RNGKey,
+) -> jnp.ndarray:
+    return random.uniform(key=rnd_key, shape=(genome_length,))
+
+
+def generate_mixed_genome(
+        float_genome_length: int,
+        genome_mask: jnp.ndarray,
+        rnd_key: RNGKey,
+        genome_transformation_function: Callable[[jnp.ndarray], jnp.ndarray] = _identity,
+        fixed_trailing: jnp.ndarray = jnp.asarray([])
+) -> jnp.ndarray:
+    float_rnd_key, int_rnd_key = random.split(rnd_key)
+    float_genome = generate_float_genome(float_genome_length, float_rnd_key)
+    integer_genome = generate_integer_genome(genome_mask, int_rnd_key, genome_transformation_function, fixed_trailing)
+    return jnp.concatenate([float_genome, integer_genome])
+
+
 def generate_population(
-    pop_size: int,
-    genome_mask: jnp.ndarray,
-    rnd_key: RNGKey,
-    genome_transformation_function: Callable[[jnp.ndarray], jnp.ndarray] = _identity,
-    fixed_genome_trailing: jnp.ndarray = jnp.asarray([])
+        pop_size: int,
+        genome_mask: jnp.ndarray,
+        rnd_key: RNGKey,
+        float_header_length: int = 0,
+        genome_transformation_function: Callable[[jnp.ndarray], jnp.ndarray] = _identity,
+        fixed_genome_trailing: jnp.ndarray = jnp.asarray([])
 ) -> jnp.ndarray:
     sub_keys = random.split(rnd_key, pop_size)
-    partial_generate_genome = partial(generate_genome,
+    partial_generate_genome = partial(generate_mixed_genome,
+                                      float_genome_length=float_header_length,
                                       genome_mask=genome_mask,
                                       genome_transformation_function=genome_transformation_function,
                                       fixed_trailing=fixed_genome_trailing
@@ -132,13 +154,15 @@ def generate_population(
 
 
 def compute_mutation_fn(
-    genome_mask: jnp.ndarray,
-    mutation_mask: jnp.ndarray
+        genome_mask: jnp.ndarray,
+        mutation_mask: jnp.ndarray,
+        float_mutation_sigma: float = 0.1
 ) -> Callable[[Genotype, RNGKey], Tuple[Genotype, RNGKey]]:
     def _mutation_fn(genomes: Genotype, rand_key: RNGKey) -> Tuple[Genotype, RNGKey]:
         rand_key, *mutate_keys = random.split(rand_key, len(genomes) + 1)
         mutated_genomes = vmap(
-            partial(mutate_genome, genome_mask=genome_mask, mutation_mask=mutation_mask),
+            partial(mutate_genome, genome_mask=genome_mask, mutation_mask=mutation_mask,
+                    float_mutation_sigma=float_mutation_sigma),
             in_axes=(0, 0)
         )(genomes, jnp.array(mutate_keys))
         return mutated_genomes, rand_key
@@ -159,8 +183,9 @@ def compute_variation_fn() -> Callable[[Genotype, Genotype, RNGKey], Tuple[Genot
 
 
 def compute_variation_mutation_fn(
-    genome_mask: jnp.ndarray,
-    mutation_mask: jnp.ndarray
+        genome_mask: jnp.ndarray,
+        mutation_mask: jnp.ndarray,
+        float_mutation_sigma: float = 0.1
 ) -> Callable[[Genotype, Genotype, RNGKey], Tuple[Genotype, RNGKey]]:
     def _variation_mutation_fn(genomes1: Genotype, genomes2: Genotype, rand_key: RNGKey) -> Tuple[Genotype, RNGKey]:
         rand_key, *var_keys = random.split(rand_key, len(genomes1) + 1)
@@ -170,7 +195,8 @@ def compute_variation_mutation_fn(
         )(genomes1, genomes2, jnp.array(var_keys))
         rand_key, *mutate_keys = random.split(rand_key, len(crossed_over_genomes) + 1)
         mutated_genomes = vmap(
-            partial(mutate_genome, genome_mask=genome_mask, mutation_mask=mutation_mask),
+            partial(mutate_genome, genome_mask=genome_mask, mutation_mask=mutation_mask,
+                    float_mutation_sigma=float_mutation_sigma),
             in_axes=(0, 0)
         )(crossed_over_genomes, jnp.array(mutate_keys))
         return mutated_genomes, rand_key
@@ -179,24 +205,32 @@ def compute_variation_mutation_fn(
 
 
 def mutate_genome(
-    genome: jnp.ndarray,
-    rnd_key: RNGKey,
-    genome_mask: jnp.ndarray,
-    mutation_mask: jnp.ndarray,
-    genome_transformation_function: Callable[[jnp.ndarray], jnp.ndarray] = _identity
+        genome: jnp.ndarray,
+        rnd_key: RNGKey,
+        genome_mask: jnp.ndarray,
+        mutation_mask: jnp.ndarray,
+        genome_transformation_function: Callable[[jnp.ndarray], jnp.ndarray] = _identity,
+        float_mutation_sigma: float = 0.1
 ) -> jnp.ndarray:
-    prob_key, new_genome_key = random.split(rnd_key, 2)
-    new_genome = generate_genome(genome_mask, new_genome_key, genome_transformation_function)
+    # if the header is floating only, split the genome
+    floating_genome, integer_genome = jnp.split(genome, [len(genome) - len(genome_mask)])
+    float_rnd_key, integer_rnd_key = random.split(rnd_key, 2)
+    # mutate floating part
+    mutated_floating_genome = (floating_genome
+                               + random.normal(key=float_rnd_key, shape=floating_genome.shape) * float_mutation_sigma)
+    # mutate integer part
+    new_genome = generate_integer_genome(genome_mask, integer_rnd_key, genome_transformation_function)
     mutation_probs = random.uniform(key=rnd_key, shape=mutation_mask.shape)
     old_ids = (mutation_probs >= mutation_mask)
     new_ids = (mutation_probs < mutation_mask)
-    return jnp.floor(genome * old_ids + new_ids * new_genome).astype(int)
+    mutated_integer_genome = jnp.floor(integer_genome * old_ids + new_ids * new_genome)
+    return jnp.concatenate([mutated_floating_genome, mutated_integer_genome])
 
 
 def lgp_one_point_crossover_genomes(
-    genome1: jnp.ndarray,
-    genome2: jnp.ndarray,
-    rnd_key: RNGKey
+        genome1: jnp.ndarray,
+        genome2: jnp.ndarray,
+        rnd_key: RNGKey
 ) -> Tuple[jnp.ndarray, jnp.ndarray]:
     assert len(genome1) == len(genome2)
     rnd_key, xover_key = random.split(rnd_key, 2)
