@@ -30,7 +30,7 @@ def compute_body_encoding_function(config: Dict) -> Callable[[jnp.ndarray], np.n
     if body_encoding == "direct":
         return partial(encode_body_directly, make_connected=True)
     elif body_encoding == "indirect":
-        n_elements = config.get("n_elements", 10)
+        n_elements = config.get("n_body_elements", 10)
         return partial(encode_body_indirectly, n_elements=n_elements)
     else:
         raise ValueError("Body encoding must be either direct or indirect.")
