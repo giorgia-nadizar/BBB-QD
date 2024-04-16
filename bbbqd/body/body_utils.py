@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Dict, Callable
+from typing import Dict, Callable, Tuple
 
 import jax.numpy as jnp
 import numpy as np
@@ -15,12 +15,12 @@ def compute_body_mutation_mask(config: Dict) -> jnp.ndarray:
     return config["p_mut_body"] * jnp.ones((config["grid_size"]) ** 2)
 
 
-def compute_body_encoding_function(config: Dict) -> Callable[[jnp.ndarray], np.ndarray]:
+def compute_body_encoding_function(config: Dict) -> Tuple[Callable[[jnp.ndarray], np.ndarray], int]:
     body_encoding = config.get("body_encoding", "direct")
     if body_encoding == "direct":
-        return partial(encode_body_directly, make_connected=True)
+        return partial(encode_body_directly, make_connected=True), config["grid_size"] ** 2
     elif body_encoding == "indirect":
         n_elements = config.get("n_elements", 10)
-        return partial(encode_body_indirectly, n_elements=n_elements)
+        return partial(encode_body_indirectly, n_elements=n_elements), 2 * config["grid_size"] ** 2
     else:
         raise ValueError("Body encoding must be either direct or indirect.")

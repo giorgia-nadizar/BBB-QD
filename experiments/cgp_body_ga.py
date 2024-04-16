@@ -78,11 +78,11 @@ def run_body_evo_ga(config: Dict[str, Any]):
     evaluation_fn = partial(evaluate_controller_and_body, config=config)
 
     # Body encoding function
-    body_encoding_fn = compute_body_encoding_function(config)
+    body_encoding_fn, body_genome_size = compute_body_encoding_function(config)
 
     # Define genome evaluation fn
     def _evaluate_genome(genome: jnp.ndarray) -> float:
-        body_genome, controller_genome = jnp.split(genome, [config["grid_size"] ** 2])
+        body_genome, controller_genome = jnp.split(genome, [body_genome_size])
         controller = controller_creation_fn(program_encoding_fn(controller_genome))
         body = body_encoding_fn(body_genome)
         return evaluation_fn(controller, body)

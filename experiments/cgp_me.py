@@ -79,7 +79,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     controller_creation_fn = compute_controller_generation_fn(config)
 
     # Body encoding function
-    body_encoding_fn = compute_body_encoding_function(config)
+    body_encoding_fn, body_genome_size = compute_body_encoding_function(config)
 
     # Descriptors
     brain_descr_fn, _ = get_graph_descriptor_extractor(config)
@@ -91,7 +91,7 @@ def run_body_evo_me(config: Dict[str, Any]):
 
     # Define genome evaluation fn -> returns fitness and brain, body, behavior descriptors
     def _evaluate_genome(genome: jnp.ndarray) -> Tuple[float, np.ndarray]:
-        body_genome, controller_genome = jnp.split(genome, [config["grid_size"] ** 2])
+        body_genome, controller_genome = jnp.split(genome, [body_genome_size])
         controller = controller_creation_fn(program_encoding_fn(controller_genome))
         body = body_encoding_fn(body_genome)
         brain_descriptors = brain_descr_fn(controller_genome)
