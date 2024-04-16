@@ -15,6 +15,7 @@ import yaml
 from bbbqd.behavior.behavior_utils import get_behavior_descriptors_functions
 from bbbqd.body.bodies import encode_body
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
+from bbbqd.body.body_utils import compute_body_mask
 from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
@@ -49,7 +50,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     random_key = jax.random.PRNGKey(config["seed"])
 
     # Init population of controllers
-    body_mask = jnp.ones((config["grid_size"]) ** 2) * 5
+    body_mask = compute_body_mask(config)
     controller_mask = compute_genome_mask(config, config["n_in"], config["n_out"])
     genome_mask = jnp.concatenate([body_mask, controller_mask])
 
@@ -206,8 +207,8 @@ if __name__ == '__main__':
         "solver": "cgp",
         "env_name": "Walker-v0",
         "episode_length": 200,
-        "pop_size": 50,
-        "parents_size": 45,
+        "pop_size": 10,
+        "parents_size": 9,
         "n_iterations": 4000,
         "fixed_outputs": True,
         "controller": "global",

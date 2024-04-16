@@ -12,6 +12,7 @@ from typing import Tuple, Dict, Any
 import yaml
 
 from bbbqd.body.bodies import encode_body
+from bbbqd.body.body_utils import compute_body_mask
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.wrappers import make_env
@@ -45,7 +46,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
     random_key = jax.random.PRNGKey(config["seed"])
 
     # Init population of controllers
-    body_mask = jnp.ones((config["grid_size"]) ** 2) * 5
+    body_mask = compute_body_mask(config)
     controller_mask = compute_genome_mask(config, config["n_in"], config["n_out"])
     genome_mask = jnp.concatenate([body_mask, controller_mask])
 
