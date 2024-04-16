@@ -236,7 +236,7 @@ if __name__ == '__main__':
             cfg = copy.deepcopy(base_cfg)
             cfg["seed"] = seed
             cfg["sampler"] = sampler
-            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-me-{sampler}"
+            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-{sampler}"
             print(f"{counter}/{len(seeds) * len(samplers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']},"
                   f" {seed}, {sampler}")
             run_body_evo_me(cfg)
