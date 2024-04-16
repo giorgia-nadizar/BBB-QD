@@ -68,9 +68,7 @@ def _floating_occupation_to_boolean(occupation: np.ndarray, n_elements: int) -> 
     boolean_occupation[idx] = 1
     elements = 1
     while elements < n_elements:
-        print(elements)
         candidates = _find_candidates(boolean_occupation)
-        print(candidates)
         occupation_candidates = occupation * candidates
         idx = np.unravel_index(np.argmax(occupation_candidates, axis=None), occupation_candidates.shape)
         boolean_occupation[idx] = 1
