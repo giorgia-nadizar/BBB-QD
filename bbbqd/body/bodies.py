@@ -59,17 +59,21 @@ def _find_candidates(boolean_matrix: np.ndarray) -> np.ndarray:
                     (y + 1 < len(boolean_matrix) and boolean_matrix[x][y + 1] == 1)
             ):
                 candidates[x][y] = 1
-    return boolean_matrix
+    return candidates
 
 
 def _floating_occupation_to_boolean(occupation: np.ndarray, n_elements: int) -> np.ndarray:
     boolean_occupation = np.zeros_like(occupation)
-    boolean_occupation[np.argmax(occupation)] = 1
+    idx = np.unravel_index(np.argmax(occupation, axis=None), occupation.shape)
+    boolean_occupation[idx] = 1
     elements = 1
     while elements < n_elements:
+        print(elements)
         candidates = _find_candidates(boolean_occupation)
+        print(candidates)
         occupation_candidates = occupation * candidates
-        boolean_occupation[np.argmax(occupation_candidates)] = 1
+        idx = np.unravel_index(np.argmax(occupation_candidates, axis=None), occupation_candidates.shape)
+        boolean_occupation[idx] = 1
         elements += 1
     return boolean_occupation
 
