@@ -11,7 +11,6 @@ from typing import Tuple, Dict, Any
 
 import yaml
 
-from bbbqd.body.bodies import encode_body_directly
 from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
@@ -190,17 +189,17 @@ if __name__ == '__main__':
 
     counter = 0
     for seed in seeds:
-        for controller in controllers:
+        for controller_type in controllers:
             counter += 1
             cfg = copy.deepcopy(base_cfg)
             cfg["seed"] = seed
-            cfg["controller"] = controller.replace("2", "")
-            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}_{controller}"
-            if "2" in controller:
+            cfg["controller"] = controller_type.replace("2", "")
+            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}_{controller_type}"
+            if "2" in controller_type:
                 cfg["flags"]["observation_range"] = 2
             else:
                 cfg["flags"]["observation_range"] = 1
             print(
                 f"{counter}/{len(seeds) * len(controllers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, "
-                f"{controller}, {seed}")
+                f"{controller_type}, {seed}")
             run_body_evo_ga(cfg)
