@@ -11,7 +11,7 @@ from typing import Tuple, Dict, Any
 
 import yaml
 
-from bbbqd.body.bodies import encode_body
+from bbbqd.body.bodies import encode_body_directly
 from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body

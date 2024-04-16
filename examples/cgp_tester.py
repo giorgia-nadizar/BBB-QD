@@ -3,7 +3,7 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 
-from bbbqd.body.bodies import encode_body
+from bbbqd.body.bodies import encode_body_directly
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller, evaluate_controller_and_body
 from bbbqd.wrappers import make_env
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     controller_creation_fn = compute_controller_generation_fn(config)
 
     # Body encoding function
-    body_encoding_fn = partial(encode_body, make_connected=True)
+    body_encoding_fn = partial(encode_body_directly, make_connected=True)
 
     # Encode individual and evaluate it
     if config.get("fixed_body", True):

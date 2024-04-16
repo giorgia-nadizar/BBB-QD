@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from moviepy.video.compositing.CompositeVideoClip import clips_array
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-from bbbqd.body.bodies import encode_body
+from bbbqd.body.bodies import encode_body_directly
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.wrappers import make_env
 from qdax.core.gp.encoding import compute_encoding_function
@@ -40,7 +40,7 @@ def make_video(folder: str, render: bool = True, video_file_name: str = None, ex
         body = np.array(config["body"])
     else:
         body_genome, controller_genome = jnp.split(genome, [config["grid_size"] ** 2])
-        body_encoding_fn = partial(encode_body, make_connected=True)
+        body_encoding_fn = partial(encode_body_directly, make_connected=True)
         body = body_encoding_fn(body_genome)
 
     controller = controller_creation_fn(program_encoding_fn(controller_genome))
