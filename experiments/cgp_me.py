@@ -15,7 +15,7 @@ import yaml
 from bbbqd.behavior.behavior_utils import get_behavior_descriptors_functions
 from bbbqd.body.bodies import encode_body
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
-from bbbqd.body.body_utils import compute_body_mask
+from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask
 from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
@@ -55,7 +55,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     genome_mask = jnp.concatenate([body_mask, controller_mask])
 
     # Compute mutation masks
-    body_mutation_mask = config["p_mut_body"] * jnp.ones(len(body_mask))
+    body_mutation_mask = compute_body_mutation_mask(config)
     controller_mutation_mask = compute_mutation_mask(config, config["n_out"])
     mutation_mask = jnp.concatenate([body_mutation_mask, controller_mutation_mask])
 
