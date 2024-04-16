@@ -215,7 +215,7 @@ if __name__ == '__main__':
         "parents_size": 45,
         "n_iterations": 4000,
         "fixed_outputs": True,
-        "controller": "global",
+        "controller": "local",
         "flags": {
             "observe_voxel_vel": True,
             "observe_voxel_volume": True,
@@ -224,7 +224,9 @@ if __name__ == '__main__':
         "jax": True,
         "program_wrapper": True,
         "skip": 5,
-        "grid_size": 5,
+        "grid_size": 10,
+        "n_body_elements": 20,
+        "body_encoding": "indirect",
         "fixed_body": False,
 
         # descriptors
