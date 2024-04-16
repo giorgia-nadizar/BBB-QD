@@ -12,7 +12,7 @@ from typing import Tuple, Dict, Any
 import yaml
 
 from bbbqd.body.bodies import encode_body
-from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask
+from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.wrappers import make_env
@@ -78,7 +78,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
     evaluation_fn = partial(evaluate_controller_and_body, config=config)
 
     # Body encoding function
-    body_encoding_fn = partial(encode_body, make_connected=True)
+    body_encoding_fn = compute_body_encoding_function(config)
 
     # Define genome evaluation fn
     def _evaluate_genome(genome: jnp.ndarray) -> float:

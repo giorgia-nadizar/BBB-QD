@@ -15,7 +15,7 @@ import yaml
 from bbbqd.behavior.behavior_utils import get_behavior_descriptors_functions
 from bbbqd.body.bodies import encode_body
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
-from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask
+from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function
 from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
@@ -79,7 +79,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     controller_creation_fn = compute_controller_generation_fn(config)
 
     # Body encoding function
-    body_encoding_fn = partial(encode_body, make_connected=True)
+    body_encoding_fn = compute_body_encoding_function(config)
 
     # Descriptors
     brain_descr_fn, _ = get_graph_descriptor_extractor(config)
