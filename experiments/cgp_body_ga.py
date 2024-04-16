@@ -109,11 +109,12 @@ def run_body_evo_ga(config: Dict[str, Any]):
         return jnp.expand_dims(jnp.asarray(fitnesses), axis=1), None, rnd_key
 
     # Define emitter
-    mutation_fn = compute_mutation_fn(genome_mask, mutation_mask)
+    mutation_fn = compute_mutation_fn(genome_mask, mutation_mask, config.get("float_mutation_sigma", 0.1))
     variation_fn = None
     variation_perc = 0.0
     if config["solver"] == "lgp":
-        variation_fn = compute_variation_mutation_fn(genome_mask, mutation_mask)
+        variation_fn = compute_variation_mutation_fn(genome_mask, mutation_mask,
+                                                     config.get("float_mutation_sigma", 0.1))
         variation_perc = 1.0
 
     mixing_emitter = MixingEmitter(
