@@ -14,7 +14,8 @@ from bbbqd.wrappers import make_env
 from qdax.core.gp.encoding import compute_encoding_function
 
 
-def make_video(folder: str, render: bool = True, video_file_name: str = None, extra_prefix: str = "") -> None:
+def make_video(folder: str, render: bool = True, video_file_name: str = None, extra_prefix: str = "",
+               position: int = None) -> None:
     config = yaml.safe_load(Path(f"{folder}/config.yaml").read_text())
 
     # Load fitnesses and genotypes
@@ -25,7 +26,7 @@ def make_video(folder: str, render: bool = True, video_file_name: str = None, ex
     genotypes = jnp.load(f"{folder}/{extra_prefix}genotypes.npy")
 
     # Find best
-    genome = genotypes[jnp.argmax(fitnesses)].astype(int)
+    genome = genotypes[jnp.argmax(fitnesses)].astype(int) if position is None else genotypes[position].astype(int)
 
     # Define encoding function
     program_encoding_fn = compute_encoding_function(config)
@@ -86,20 +87,42 @@ if __name__ == '__main__':
     #         print(f"{body_name}, {controller_name}")
     #         make_video(results_path, render=False, video_file_name=video_file_path)
 
-    # me videos
-    base_info = "evo-body-5x5-me"
-    for sampler in ["all", "s1", "s2", "s3"]:
-        extra_prefix = f"r1_"
-        results_path = f"../results/{base_info}-{sampler}_{seed}"
-        video_file_path = f"../videos/{base_info}-{sampler}_{seed}.avi"
-        print(f"{sampler}")
-        make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix=extra_prefix)
+    # # me videos
+    # base_info = "evo-body-5x5-me"
+    # for sampler in ["all", "s1", "s2", "s3"]:
+    #     extra_prefix = f"r1_"
+    #     results_path = f"../results/{base_info}-{sampler}_{seed}"
+    #     video_file_path = f"../videos/{base_info}-{sampler}_{seed}.avi"
+    #     print(f"{sampler}")
+    #     make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix=extra_prefix)
+    #
+    # # collage of me videos
+    # video_files = []
+    # for sampler in ["all", "s1", "s2", "s3"]:
+    #     video_path = f"../videos/evo-body-5x5-me-{sampler}_{seed}.avi"
+    #     video_files.append(video_path)
+    # video_clips = [VideoFileClip(file) for file in video_files]
+    # collage = clips_array([video_clips])
+    # collage.write_videofile(f"../videos/evo-body-5x5-me_{seed}.mp4", fps=24, codec='mpeg4')
 
-    # collage of me videos
-    video_files = []
-    for sampler in ["all", "s1", "s2", "s3"]:
-        video_path = f"../videos/evo-body-5x5-me-{sampler}_{seed}.avi"
-        video_files.append(video_path)
-    video_clips = [VideoFileClip(file) for file in video_files]
-    collage = clips_array([video_clips])
-    collage.write_videofile(f"../videos/evo-body-5x5-me_0.mp4", fps=24, codec='mpeg4')
+    # videos for behavior analysis
+    centroids_names = {
+        749: "low-x+high-y",
+        687: "high-x+high-y",
+        200: "high-x+low-y",
+        967: "low-x+low-y",
+    }
+    # for centroid, name in centroids_names.items():
+    #     print(centroid)
+    #     print(name)
+    #     base_info = "evo-body-5x5-me"
+    #     results_path = f"../results/{base_info}-s3_{seed}"
+    #     video_file_path = f"../videos/behavior_{name}_{seed}.avi"
+    #     make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix="r3_",
+    #                position=centroid)
+    video_clips = [[VideoFileClip(f"../videos/behavior_low-x+high-y_{seed}.avi"),
+                    VideoFileClip(f"../videos/behavior_high-x+high-y_{seed}.avi")],
+                   [VideoFileClip(f"../videos/behavior_low-x+low-y_{seed}.avi"),
+                    VideoFileClip(f"../videos/behavior_high-x+low-y_{seed}.avi")]]
+    collage = clips_array(video_clips)
+    collage.write_videofile(f"../videos/behavior_{seed}.mp4", fps=24, codec='mpeg4')
