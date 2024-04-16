@@ -80,7 +80,7 @@ def encode_body_indirectly(body_string: jnp.ndarray, n_elements: int) -> np.ndar
     if n_elements < 1:
         raise ValueError("n_elements must be at least 1")
     occupation_string, material_string = jnp.split(body_string, 2)
-    material_string += 1
+    material_string = material_string + jnp.ones_like(material_string)
     grid_size = np.sqrt(len(occupation_string)).astype(int)
     occupation_grid = np.reshape(np.asarray(occupation_string), (-1, grid_size))
     boolean_occupation_grid = _floating_occupation_to_boolean(occupation_grid, n_elements)
