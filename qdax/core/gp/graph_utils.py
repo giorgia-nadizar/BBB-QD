@@ -19,6 +19,7 @@ def get_complexity_fn(config: Dict) -> Callable[[jnp.ndarray], float]:
 
 
 def compute_cgp_descriptors(genome: jnp.ndarray, config: Dict, descriptors_indexes: jnp.ndarray) -> jnp.ndarray:
+    genome = genome.astype(int)
     active = compute_cgp_active_graph(genome, config)
     active_fraction = jnp.sum(active[config["n_in"]:]) / config["n_nodes"]
     inputs_fraction = jnp.sum(active[:config["n_in"]]) / config["n_in"]
@@ -29,6 +30,7 @@ def compute_cgp_descriptors(genome: jnp.ndarray, config: Dict, descriptors_index
 
 
 def compute_lgp_descriptors(genome: jnp.ndarray, config: Dict, descriptors_indexes: jnp.ndarray) -> jnp.ndarray:
+    genome = genome.astype(int)
     active = compute_lgp_coding_lines(genome, config)
     active_fraction = jnp.sum(active) / len(active)
     inputs_fraction = jnp.sum(_lgp_inputs_usage(active, genome, config)) / config["n_in"]

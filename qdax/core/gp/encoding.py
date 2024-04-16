@@ -156,6 +156,7 @@ def _genome_to_cgp_program(
         config: Dict,
         outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
 ) -> Callable[[jnp.ndarray, ProgramState], Tuple[ProgramState, jnp.ndarray]]:
+    genome = genome.astype(int)
     x_genes, y_genes, f_genes, out_genes = jnp.split(genome, [config["n_nodes"] * i for i in range(1, 4)])
 
     def _program(inputs: jnp.ndarray, buffer: ProgramState) -> (ProgramState, jnp.ndarray):
@@ -180,6 +181,7 @@ def _genome_to_lgp_program(
         config: Dict,
         outputs_wrapper: Callable[[jnp.ndarray], jnp.ndarray] = jnp.tanh
 ) -> Callable[[jnp.ndarray, ProgramState], Tuple[ProgramState, jnp.ndarray]]:
+    genome = genome.astype(int)
     lhs_genes, x_genes, y_genes, f_genes = jnp.split(genome, 4)
     output_positions = jnp.arange(start=config["n_registers"] - config["n_out"], stop=config["n_registers"])
 
