@@ -14,7 +14,8 @@ import yaml
 
 from bbbqd.behavior.behavior_utils import get_behavior_descriptors_functions
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
-from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function
+from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function, \
+    compute_body_float_genome_length
 from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
@@ -55,6 +56,7 @@ def run_body_evo_me(config: Dict[str, Any]):
 
     # Compute mutation masks
     body_mutation_mask = compute_body_mutation_mask(config)
+    body_float_length = compute_body_float_genome_length(config)
     controller_mutation_mask = compute_mutation_mask(config, config["n_out"])
     mutation_mask = jnp.concatenate([body_mutation_mask, controller_mutation_mask])
 
@@ -65,11 +67,13 @@ def run_body_evo_me(config: Dict[str, Any]):
             pop_size=config["parents_size"],
             genome_mask=genome_mask,
             rnd_key=pop_key,
-            fixed_genome_trailing=fixed_outputs
+            fixed_genome_trailing=fixed_outputs,
+            float_header_length=body_float_length
         )
         config["p_mut_outputs"] = 0
     else:
-        population = generate_population(pop_size=config["parents_size"], genome_mask=genome_mask, rnd_key=pop_key)
+        population = generate_population(pop_size=config["parents_size"], genome_mask=genome_mask, rnd_key=pop_key,
+                                         float_header_length=body_float_length)
 
     # Define encoding function
     program_encoding_fn = compute_encoding_function(config)
@@ -78,7 +82,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     controller_creation_fn = compute_controller_generation_fn(config)
 
     # Body encoding function
-    body_encoding_fn, body_genome_size = compute_body_encoding_function(config)
+    body_encoding_fn = compute_body_encoding_function(config)
 
     # Descriptors
     brain_descr_fn, _ = get_graph_descriptor_extractor(config)
@@ -90,7 +94,7 @@ def run_body_evo_me(config: Dict[str, Any]):
 
     # Define genome evaluation fn -> returns fitness and brain, body, behavior descriptors
     def _evaluate_genome(genome: jnp.ndarray) -> Tuple[float, np.ndarray]:
-        body_genome, controller_genome = jnp.split(genome, [body_genome_size])
+        body_genome, controller_genome = jnp.split(genome, [len(body_mask) + body_float_length])
         controller = controller_creation_fn(program_encoding_fn(controller_genome))
         body = body_encoding_fn(body_genome)
         brain_descriptors = brain_descr_fn(controller_genome)
