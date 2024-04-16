@@ -4,7 +4,7 @@ from typing import Dict, Callable
 import jax.numpy as jnp
 import numpy as np
 
-from bbbqd.body.bodies import encode_body_directly
+from bbbqd.body.bodies import encode_body_directly, encode_body_indirectly
 
 
 def compute_body_mask(config: Dict) -> jnp.ndarray:
@@ -20,6 +20,7 @@ def compute_body_encoding_function(config: Dict) -> Callable[[jnp.ndarray], np.n
     if body_encoding == "direct":
         return partial(encode_body_directly, make_connected=True)
     elif body_encoding == "indirect":
-        print()
+        n_elements = config.get("n_elements", 10)
+        return partial(encode_body_indirectly, n_elements=n_elements)
     else:
         raise ValueError("Body encoding must be either direct or indirect.")
