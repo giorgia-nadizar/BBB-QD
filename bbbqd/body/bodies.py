@@ -63,13 +63,14 @@ def _find_candidates(boolean_matrix: np.ndarray) -> np.ndarray:
 
 
 def _floating_occupation_to_boolean(occupation: np.ndarray, n_elements: int) -> np.ndarray:
-    boolean_occupation = np.zeros_like(occupation)
-    idx = np.unravel_index(np.argmax(occupation, axis=None), occupation.shape)
+    positive_occupation = occupation - np.min(occupation) + .1
+    boolean_occupation = np.zeros_like(positive_occupation)
+    idx = np.unravel_index(np.argmax(positive_occupation, axis=None), positive_occupation.shape)
     boolean_occupation[idx] = 1
     elements = 1
     while elements < n_elements:
         candidates = _find_candidates(boolean_occupation)
-        occupation_candidates = occupation * candidates
+        occupation_candidates = positive_occupation * candidates
         idx = np.unravel_index(np.argmax(occupation_candidates, axis=None), occupation_candidates.shape)
         boolean_occupation[idx] = 1
         elements += 1
@@ -87,6 +88,4 @@ def encode_body_indirectly(body_string: jnp.ndarray, n_elements: int) -> np.ndar
     material_grid = np.reshape(np.asarray(material_string), (-1, grid_size))
     encoded_body = (boolean_occupation_grid * material_grid).astype(int)
     connected_body = _remove_not_connected_components(encoded_body)
-    if not np.array_equal(connected_body, encoded_body):
-        print(body_string)
     return encoded_body
