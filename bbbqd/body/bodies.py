@@ -85,4 +85,8 @@ def encode_body_indirectly(body_string: jnp.ndarray, n_elements: int) -> np.ndar
     occupation_grid = np.reshape(np.asarray(occupation_string), (-1, grid_size))
     boolean_occupation_grid = _floating_occupation_to_boolean(occupation_grid, n_elements)
     material_grid = np.reshape(np.asarray(material_string), (-1, grid_size))
-    return (boolean_occupation_grid * material_grid).astype(int)
+    encoded_body = (boolean_occupation_grid * material_grid).astype(int)
+    connected_body = _remove_not_connected_components(encoded_body)
+    if not np.array_equal(connected_body, encoded_body):
+        print(body_string)
+    return encoded_body
