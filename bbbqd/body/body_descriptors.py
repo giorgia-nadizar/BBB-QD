@@ -27,6 +27,10 @@ def get_body_descriptor_extractor(config: Dict) -> Tuple[Callable[[np.ndarray], 
                 descriptor.append(relative_width)
             if "relative_height" in body_descriptors:
                 descriptor.append(relative_height)
+        if "n_active_voxels" in body_descriptors:
+            descriptor.append(n_active_voxels(body))
+        if "relative_activity" in body_descriptors:
+            descriptor.append(relative_activity(body))
         if "elongation" in body_descriptors:
             descriptor.append(elongation(body))
         if "compactness" in body_descriptors:
@@ -49,6 +53,14 @@ def _bounding_box_limits(body: np.ndarray) -> Tuple[int, int, int, int]:
 
 def n_voxels(body: np.ndarray) -> int:
     return (body > 0).sum()
+
+
+def n_active_voxels(body: np.ndarray) -> int:
+    return (body >= 3).sum()
+
+
+def relative_activity(body: np.ndarray) -> float:
+    return n_active_voxels(body) / n_voxels(body)
 
 
 def relative_size(body: np.ndarray) -> float:
