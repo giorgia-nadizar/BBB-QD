@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Any, Callable, Dict, Tuple
 
 import numpy as np
@@ -12,7 +13,10 @@ def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
     if isinstance(descriptors, str):
         descriptors = [descriptors]
     descriptors_extractor_function = _get_descriptors_extractor_function(descriptors)
-    behavior_descriptors_computing_function = _get_behavior_descriptors_computing_function(processing)
+    behavior_descriptors_computing_function = _get_behavior_descriptors_computing_function(processing,
+                                                                                           cut_off=config.get(
+                                                                                               "frequency_cut_off",
+                                                                                               0.4))
     return descriptors_extractor_function, behavior_descriptors_computing_function
 
 
@@ -54,10 +58,10 @@ def _get_descriptors_extractor_function(descriptors: str) -> Callable[[Dict[str,
     return _descriptors_extractor
 
 
-def _get_behavior_descriptors_computing_function(processing: str) -> Callable[[np.ndarray], np.ndarray]:
+def _get_behavior_descriptors_computing_function(processing: str, cut_off: float) -> Callable[[np.ndarray], np.ndarray]:
     allowed_values = ["median", "peak"]
     if processing not in allowed_values:
         raise ValueError(f"Processing should be in {allowed_values}, got {processing}")
-    processing_fn = _signal_median if processing == "median" else _signal_peak
-
+    processing_fn = partial(_signal_median if processing == "median" else _signal_peak,
+                            cut_off=cut_off)
     return lambda signals: np.asarray([processing_fn(s) for s in _compute_spectra(signals)])
