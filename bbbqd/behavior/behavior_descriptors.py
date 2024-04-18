@@ -24,7 +24,7 @@ def _signal_median(signal: np.ndarray, ignore_continuous_component: bool = False
     if ignore_continuous_component:
         signal = signal[1:len(signal)]
     cut_off_idx = np.floor(cut_off * len(signal)).astype(int)
-    print(cut_off, cut_off_idx)
+    print(cut_off, cut_off_idx, len(signal))
     signal = signal[:cut_off_idx]
     total_sum = np.sum(signal)
     first_sum = 0
