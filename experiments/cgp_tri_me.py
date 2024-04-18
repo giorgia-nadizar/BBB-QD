@@ -233,7 +233,8 @@ if __name__ == '__main__':
         "graph_descriptors": "function_arities",
         "body_descriptors": ["elongation", "relative_activity"],
         "behavior_descriptors": ["velocity_y", "angle"],
-        "qd_wrappers": ["velocity", "angle"]
+        "qd_wrappers": ["velocity", "angle"],
+        "frequency_cut_off": 0.4
     }
 
     counter = 0
