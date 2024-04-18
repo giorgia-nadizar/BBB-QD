@@ -231,7 +231,7 @@ if __name__ == '__main__':
 
         # descriptors
         "graph_descriptors": "function_arities",
-        "body_descriptors": ["elongation", "relative_size"],
+        "body_descriptors": ["elongation", "relative_activity"],
         "behavior_descriptors": ["velocity_y", "angle"],
         "qd_wrappers": ["velocity", "angle"]
     }
