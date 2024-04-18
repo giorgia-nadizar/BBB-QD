@@ -23,7 +23,7 @@ def _signal_peak(signal: np.ndarray, ignore_continuous_component: bool = False, 
 def _signal_median(signal: np.ndarray, ignore_continuous_component: bool = False, cut_off: float = 0.4) -> float:
     if ignore_continuous_component:
         signal = signal[1:len(signal)]
-    cut_off_idx = np.floor(cut_off * len(signal)).astype(int)
+    cut_off_idx = np.ceil(cut_off * len(signal)).astype(int)
     print(cut_off, cut_off_idx, len(signal))
     signal = signal[:cut_off_idx]
     total_sum = np.sum(signal)
