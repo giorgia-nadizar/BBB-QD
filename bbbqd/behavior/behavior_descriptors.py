@@ -15,7 +15,7 @@ def _compute_spectra(signal: np.ndarray) -> np.ndarray:
 def _signal_peak(signal: np.ndarray, ignore_continuous_component: bool = False, cut_off: float = 0.4) -> float:
     if ignore_continuous_component:
         signal = signal[1:len(signal)]
-    cut_off_idx = np.floor(cut_off * len(signal))
+    cut_off_idx = np.floor(cut_off * len(signal)).astype(int)
     signal = signal[:cut_off_idx]
     return np.argmax(signal) / len(signal)
 
@@ -23,7 +23,7 @@ def _signal_peak(signal: np.ndarray, ignore_continuous_component: bool = False, 
 def _signal_median(signal: np.ndarray, ignore_continuous_component: bool = False, cut_off: float = 0.4) -> float:
     if ignore_continuous_component:
         signal = signal[1:len(signal)]
-    cut_off_idx = np.floor(cut_off * len(signal))
+    cut_off_idx = np.floor(cut_off * len(signal)).astype(int)
     signal = signal[:cut_off_idx]
     total_sum = np.sum(signal)
     first_sum = 0
