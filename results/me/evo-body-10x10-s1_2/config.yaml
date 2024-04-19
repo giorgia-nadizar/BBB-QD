@@ -3,7 +3,7 @@ behavior_descriptors:
 - angle
 body_descriptors:
 - elongation
-- relative_size
+- relative_activity
 body_encoding: indirect
 buffer_size: 79
 controller: local
@@ -15,6 +15,7 @@ flags:
   observe_time: false
   observe_voxel_vel: true
   observe_voxel_volume: true
+frequency_cut_off: 0.4
 genome_size: 151
 graph_descriptors: function_arities
 grid_size: 10
@@ -38,8 +39,8 @@ program_wrapper: true
 qd_wrappers:
 - velocity
 - angle
-run_name: evo-body-10x10-all
-sampler: all
-seed: 0
+run_name: evo-body-10x10-s1
+sampler: s1
+seed: 2
 skip: 5
 solver: cgp
