@@ -200,7 +200,7 @@ def run_body_evo_me(config: Dict[str, Any]):
 
 
 if __name__ == '__main__':
-    seeds = range(10)
+    seeds = range(2)
     samplers = ["all", "s1", "s2", "s3"]
     base_cfg = {
         "n_nodes": 50,
@@ -232,8 +232,8 @@ if __name__ == '__main__':
         # descriptors
         "graph_descriptors": "function_arities",
         "body_descriptors": ["elongation", "relative_activity"],
-        "behavior_descriptors": ["velocity_y", "angle"],
-        "qd_wrappers": ["velocity", "angle"],
+        "behavior_descriptors": ["velocity_y", "floor_contact"],
+        "qd_wrappers": ["velocity", "floor_contact"],
         "frequency_cut_off": 0.4
     }
 
@@ -244,7 +244,7 @@ if __name__ == '__main__':
             cfg = copy.deepcopy(base_cfg)
             cfg["seed"] = seed
             cfg["sampler"] = sampler
-            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-{sampler}"
+            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-floor-{sampler}"
             print(f"{counter}/{len(seeds) * len(samplers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']},"
                   f" {seed}, {sampler}")
             run_body_evo_me(cfg)
