@@ -12,18 +12,28 @@ def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
     processing = config.get("behavior_descriptors_processing", "median")
     if isinstance(descriptors, str):
         descriptors = [descriptors]
-    descriptors_extractor_function = _get_descriptors_extractor_function(descriptors)
-    behavior_descriptors_computing_function = _get_behavior_descriptors_computing_function(processing,
-                                                                                           cut_off=config.get(
-                                                                                               "frequency_cut_off",
-                                                                                               0.4))
-    return descriptors_extractor_function, behavior_descriptors_computing_function
+    descriptors_extractor_fn = _get_descriptors_extractor_function(descriptors)
+    fft_behavior_descriptors_computing_fn = _get_behavior_descriptors_computing_function(processing,
+                                                                                         cut_off=config.get(
+                                                                                             "frequency_cut_off",
+                                                                                             0.4))
+    if "floor_contact" in descriptors:
+        def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
+            descriptors_without_floor_contact = signal[:, :signal.shape[1] - 1]
+            floor_contact = signal[:, signal.shape[1] - 1]
+            processed_descriptors = fft_behavior_descriptors_computing_fn(descriptors_without_floor_contact)
+            average_floor_contact = float(floor_contact.sum()) / len(floor_contact)
+            return np.concatenate([processed_descriptors, average_floor_contact])
+    else:
+        behavior_descriptors_computing_fn = fft_behavior_descriptors_computing_fn
+    return descriptors_extractor_fn, behavior_descriptors_computing_fn
 
 
 def _get_descriptors_extractor_function(descriptors: str) -> Callable[[Dict[str, Any]], np.ndarray]:
     existing_descriptors = ["velocity", "velocity_x", "velocity_y", "velocity_angle", "velocity_module",
                             "position", "position_x", "position_y",
-                            "angle"]
+                            "angle",
+                            "floor_contact"]
     for d in descriptors:
         assert d in existing_descriptors
 
