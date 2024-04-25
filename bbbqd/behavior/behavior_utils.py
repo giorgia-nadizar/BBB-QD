@@ -13,10 +13,9 @@ def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
     if isinstance(descriptors, str):
         descriptors = [descriptors]
     descriptors_extractor_fn = _get_descriptors_extractor_function(descriptors)
+    cut_off = config.get("frequency_cut_off", 0.4)
     fft_behavior_descriptors_computing_fn = _get_behavior_descriptors_computing_function(processing,
-                                                                                         cut_off=config.get(
-                                                                                             "frequency_cut_off",
-                                                                                             0.4))
+                                                                                         cut_off=cut_off)
     if "floor_contact" in descriptors:
         def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
             descriptors_without_floor_contact = signal[:, :signal.shape[1] - 1]
