@@ -37,5 +37,5 @@ class FloorContactWrapper(gym.Wrapper):
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         obs, reward, done, info = super().step(action)
         masses_positions = self.env.object_pos_at_time(self.env.get_time(), 'robot')
-        info["floor_contact"] = np.min(masses_positions[1]) <= self.floor_level
+        info["floor_contact"] = np.asarray([np.min(masses_positions[1]) <= self.floor_level])
         return obs, reward, done, info
