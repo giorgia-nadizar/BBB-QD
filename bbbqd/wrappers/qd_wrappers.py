@@ -29,3 +29,13 @@ class CenterAngleWrapper(gym.Wrapper):
         angle = original_angle + np.pi if original_angle <= np.pi else original_angle - np.pi
         info["angle"] = angle
         return obs, reward, done, info
+
+
+class FloorContactWrapper(gym.Wrapper):
+    floor_level: float = 0.105
+
+    def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
+        obs, reward, done, info = super().step(action)
+        masses_positions = self.env.object_pos_at_time(self.env.get_time(), 'robot')
+        info["floor_contact"] = np.min(masses_positions[1]) <= self.floor_level
+        return obs, reward, done, info
