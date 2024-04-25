@@ -100,6 +100,7 @@ def run_body_evo_me(config: Dict[str, Any]):
         brain_descriptors = brain_descr_fn(controller_genome)
         body_descriptors = body_descr_fn(body)
         fitness, behavior_descriptors = evaluation_fn(controller, body)
+        print(behavior_descriptors.shape)
         return fitness, np.concatenate([brain_descriptors, body_descriptors, behavior_descriptors])
 
     # Add all functions to _LocalFunctions class, separating each with a comma
