@@ -200,7 +200,7 @@ def run_body_evo_me(config: Dict[str, Any]):
 
 
 if __name__ == '__main__':
-    seeds = range(2)
+    seeds = range(10)
     samplers = ["all", "s1", "s2", "s3"]
     base_cfg = {
         "n_nodes": 50,
@@ -234,7 +234,7 @@ if __name__ == '__main__':
         "body_descriptors": ["elongation", "relative_activity"],
         "behavior_descriptors": ["velocity_y", "floor_contact"],
         "qd_wrappers": ["velocity", "floor_contact"],
-        "frequency_cut_off": 0.4
+        "frequency_cut_off": 0.25
     }
 
     counter = 0
