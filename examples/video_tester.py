@@ -9,6 +9,7 @@ from moviepy.video.compositing.CompositeVideoClip import clips_array
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from bbbqd.body.bodies import encode_body_directly
+from bbbqd.body.body_utils import compute_body_encoding_function, compute_body_float_genome_length, compute_body_mask
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.wrappers import make_env
 from qdax.core.gp.encoding import compute_encoding_function
@@ -26,7 +27,7 @@ def make_video(folder: str, render: bool = True, video_file_name: str = None, ex
     genotypes = jnp.load(f"{folder}/{extra_prefix}genotypes.npy")
 
     # Find best
-    genome = genotypes[jnp.argmax(fitnesses)].astype(int) if position is None else genotypes[position].astype(int)
+    genome = genotypes[jnp.argmax(fitnesses)] if position is None else genotypes[position]
 
     # Define encoding function
     program_encoding_fn = compute_encoding_function(config)
@@ -39,8 +40,10 @@ def make_video(folder: str, render: bool = True, video_file_name: str = None, ex
         controller_genome = genome
         body = np.array(config["body"])
     else:
-        body_genome, controller_genome = jnp.split(genome, [config["grid_size"] ** 2])
-        body_encoding_fn = partial(encode_body_directly, make_connected=True)
+        body_float_length = compute_body_float_genome_length(config)
+        body_mask = compute_body_mask(config)
+        body_genome, controller_genome = jnp.split(genome, [len(body_mask) + body_float_length])
+        body_encoding_fn = compute_body_encoding_function(config)
         body = body_encoding_fn(body_genome)
 
     controller = controller_creation_fn(program_encoding_fn(controller_genome))
@@ -107,19 +110,19 @@ if __name__ == '__main__':
 
     # videos for behavior analysis
     centroids_names = {
-        749: "low-x+high-y",
-        687: "high-x+high-y",
-        200: "high-x+low-y",
-        967: "low-x+low-y",
+        620: "low-x+high-y",
+        306: "high-x+high-y",
+        310: "high-x+low-y",
+        208: "low-x+low-y",
     }
-    # for centroid, name in centroids_names.items():
-    #     print(centroid)
-    #     print(name)
-    #     base_info = "evo-body-5x5-me"
-    #     results_path = f"../results/{base_info}-s3_{seed}"
-    #     video_file_path = f"../videos/behavior_{name}_{seed}.avi"
-    #     make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix="r3_",
-    #                position=centroid)
+    for centroid, name in centroids_names.items():
+        print(centroid)
+        print(name)
+        base_info = "evo-body-10x10-floor"
+        results_path = f"../results/me/{base_info}-all_{seed}"
+        video_file_path = f"../videos/behavior_{name}_{seed}.avi"
+        make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix="r3_",
+                   position=centroid)
     video_clips = [[VideoFileClip(f"../videos/behavior_low-x+high-y_{seed}.avi"),
                     VideoFileClip(f"../videos/behavior_high-x+high-y_{seed}.avi")],
                    [VideoFileClip(f"../videos/behavior_low-x+low-y_{seed}.avi"),
