@@ -234,7 +234,7 @@ if __name__ == '__main__':
         "body_descriptors": ["elongation", "relative_activity"],
         "behavior_descriptors": ["velocity_y", "floor_contact"],
         "qd_wrappers": ["velocity", "floor_contact"],
-        "frequency_cut_off": 0.25
+        "frequency_cut_off": 0.5
     }
 
     counter = 0
