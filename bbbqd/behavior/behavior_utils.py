@@ -21,7 +21,7 @@ def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
             descriptors_without_floor_contact = signal[:, :signal.shape[1] - 1]
             floor_contact = signal[:, signal.shape[1] - 1]
             processed_descriptors = fft_behavior_descriptors_computing_fn(descriptors_without_floor_contact)
-            average_floor_contact = np.asarray([float(floor_contact.sum()) / config["episode_length"]])
+            average_floor_contact = np.asarray([float(floor_contact.sum()) / len(floor_contact)])
             return np.concatenate([processed_descriptors, average_floor_contact])
     else:
         behavior_descriptors_computing_fn = fft_behavior_descriptors_computing_fn
