@@ -110,10 +110,10 @@ if __name__ == '__main__':
 
     # videos for behavior analysis
     centroids_names = {
-        620: "low-x+high-y",
-        306: "high-x+high-y",
-        310: "high-x+low-y",
-        208: "low-x+low-y",
+        567: "low-x+high-y",
+        121: "high-x+high-y",
+        796: "high-x+low-y",
+        447: "low-x+low-y",
     }
     for centroid, name in centroids_names.items():
         print(centroid)
