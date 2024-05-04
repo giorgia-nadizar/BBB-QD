@@ -39,8 +39,8 @@ program_wrapper: true
 qd_wrappers:
 - velocity
 - floor_contact
-run_name: evo-body-10x10-floor-s1
-sampler: s1
+run_name: evo-body-10x10-floor-s3
+sampler: s3
 seed: 6
 skip: 5
 solver: cgp
