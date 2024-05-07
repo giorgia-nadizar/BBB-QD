@@ -29,6 +29,14 @@ class CenterPositionWrapper(gym.Wrapper):
         return obs, reward, done, info
 
 
+class ObjectPositionWrapper(gym.Wrapper):
+
+    def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
+        obs, reward, done, info = super().step(action)
+        info["object_position"] = self.env.get_pos_com_obs("package")
+        return obs, reward, done, info
+
+
 class CenterAngleWrapper(gym.Wrapper):
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
