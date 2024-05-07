@@ -13,6 +13,14 @@ class CenterVelocityWrapper(gym.Wrapper):
         return obs, reward, done, info
 
 
+class ObjectVelocityWrapper(gym.Wrapper):
+
+    def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
+        obs, reward, done, info = super().step(action)
+        info["object_velocity"] = self.env.get_vel_com_obs("package")
+        return obs, reward, done, info
+
+
 class CenterPositionWrapper(gym.Wrapper):
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
