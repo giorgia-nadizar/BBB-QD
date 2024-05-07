@@ -23,6 +23,14 @@ def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
             processed_descriptors = fft_behavior_descriptors_computing_fn(descriptors_without_floor_contact)
             average_floor_contact = np.asarray([float(floor_contact.sum()) / len(floor_contact)])
             return np.concatenate([processed_descriptors, average_floor_contact])
+    elif "walls_contact" in descriptors:
+        def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
+            descriptors_without_walls_contact = signal[:, :signal.shape[1] - 1]
+            walls_contact = signal[:, signal.shape[1] - 1]
+            processed_descriptors = fft_behavior_descriptors_computing_fn(descriptors_without_walls_contact)
+            walls_contact_filtered = walls_contact[walls_contact != np.array(None)]
+            average_walls_contact = np.asarray([float(walls_contact_filtered.sum()) / len(walls_contact_filtered)])
+            return np.concatenate([processed_descriptors, average_walls_contact])
     else:
         behavior_descriptors_computing_fn = fft_behavior_descriptors_computing_fn
     return descriptors_extractor_fn, behavior_descriptors_computing_fn
@@ -34,7 +42,7 @@ def _get_descriptors_extractor_function(descriptors: str) -> Callable[[Dict[str,
                             "angle",
                             "object_velocity", "object_velocity_x", "object_velocity_y",
                             "object_position", "object_position_x", "object_position_y",
-                            "floor_contact"]
+                            "floor_contact", "walls_contact"]
     for d in descriptors:
         assert d in existing_descriptors
 
