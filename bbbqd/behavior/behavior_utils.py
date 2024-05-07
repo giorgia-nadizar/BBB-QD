@@ -32,6 +32,8 @@ def _get_descriptors_extractor_function(descriptors: str) -> Callable[[Dict[str,
     existing_descriptors = ["velocity", "velocity_x", "velocity_y", "velocity_angle", "velocity_module",
                             "position", "position_x", "position_y",
                             "angle",
+                            "object_velocity", "object_velocity_x", "object_velocity_y",
+                            "object_position", "object_position_x", "object_position_y",
                             "floor_contact"]
     for d in descriptors:
         assert d in existing_descriptors
