@@ -18,7 +18,12 @@ def evaluate_controller_and_body(controller: Union[Controller, ControllerWrapper
         print("Body with no actuator, negative infinity fitness.")
         return -np.infty if descriptors_functions is None else -np.infty, np.asarray([0., 0.])
 
-    env = make_env(config, body)
+    try:
+        env = make_env(config, body)
+    except ValueError as e:
+        print(f"{str(e)}, negative infinity fitness.")
+        return -np.infty if descriptors_functions is None else -np.infty, np.asarray([0., 0.])
+
     cumulative_reward = 0
     obs = env.reset()
     descriptors = []
