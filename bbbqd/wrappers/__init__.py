@@ -13,14 +13,11 @@ def make_env(config: Dict[str, Any], body: np.ndarray = None) -> Union[gym.Env, 
         if config.get("body") is not None:
             body = np.array(config["body"])
         else:
-            body = np.ones((config["grid_size"], config["grid_size"])) * 3
+            body = np.ones((config["max_env_size"], config["max_env_size"])) * 3
     qd_wrappers = config.get("qd_wrappers", [])
     if isinstance(qd_wrappers, str):
         qd_wrappers = [qd_wrappers]
-    try:
-        env = gym.make(config["env_name"], body=body)
-    except ValueError:
-        env = gym.make(config["env_name"], body=body[:5, :5])
+    env = gym.make(config["env_name"], body=body)
     fixed_body = config.get("fixed_body", False)
     if config["controller"] == "global":
         env = GlobalWrapper(env,
