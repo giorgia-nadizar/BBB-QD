@@ -244,6 +244,7 @@ if __name__ == '__main__':
         "program_wrapper": True,
         "skip": 5,
         "grid_size": 10,
+        "max_env_size": 5,
         "n_body_elements": 20,
         "body_encoding": "indirect",
         "fixed_body": False,
@@ -260,7 +261,8 @@ if __name__ == '__main__':
                 cfg["seed"] = seed
                 cfg["sampler"] = sampler
                 cfg["env_name"] = env
-                cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-floor-{sampler}"
+                cfg[
+                    "run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-{env.replace('_v0', '').lower()}-{sampler}"
                 cfg.update(envs_descriptors[env])
                 print(
                     f"{counter}/{len(seeds) * len(samplers) * len(envs_descriptors)} -> evo-body-"
