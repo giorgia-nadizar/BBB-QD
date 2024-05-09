@@ -17,7 +17,10 @@ def make_env(config: Dict[str, Any], body: np.ndarray = None) -> Union[gym.Env, 
     qd_wrappers = config.get("qd_wrappers", [])
     if isinstance(qd_wrappers, str):
         qd_wrappers = [qd_wrappers]
-    env = gym.make(config["env_name"], body=body)
+    try:
+        env = gym.make(config["env_name"], body=body)
+    except ValueError:
+        env = gym.make(config["env_name"], body=body[:5, :5])
     fixed_body = config.get("fixed_body", False)
     if config["controller"] == "global":
         env = GlobalWrapper(env,
