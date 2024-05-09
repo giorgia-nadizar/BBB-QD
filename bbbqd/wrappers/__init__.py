@@ -7,6 +7,8 @@ from bbbqd.wrappers.action_wrappers import *
 from bbbqd.wrappers.full_wrappers import FullWrapper, GlobalWrapper, LocalWrapper
 from bbbqd.wrappers.observation_wrappers import *
 
+import bbbqd.environments.extended_envs
+
 
 def make_env(config: Dict[str, Any], body: np.ndarray = None) -> Union[gym.Env, FullWrapper]:
     if body is None:
