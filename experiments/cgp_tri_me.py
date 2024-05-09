@@ -210,14 +210,14 @@ if __name__ == '__main__':
         #     "qd_wrappers": ["velocity", "floor_contact"],
         #     "frequency_cut_off": 0.5
         # },
-        "Carrier-v0": {
-            "behavior_descriptors": ["object_velocity_y", "floor_contact"],
-            "qd_wrappers": ["object_velocity", "floor_contact"],
-            "frequency_cut_off": 0.5
-        },
         "Climber-v0": {
             "behavior_descriptors": ["velocity_x", "walls_contact"],
             "qd_wrappers": ["velocity", "walls_contact"],
+            "frequency_cut_off": 0.5
+        },
+        "Carrier-v0": {
+            "behavior_descriptors": ["object_velocity_y", "floor_contact"],
+            "qd_wrappers": ["object_velocity", "floor_contact"],
             "frequency_cut_off": 0.5
         }
     }
