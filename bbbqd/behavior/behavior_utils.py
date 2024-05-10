@@ -16,7 +16,14 @@ def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
     cut_off = config.get("frequency_cut_off", 0.4)
     fft_behavior_descriptors_computing_fn = _get_behavior_descriptors_computing_function(processing,
                                                                                          cut_off=cut_off)
-    if "floor_contact" in descriptors:
+    if "object_angle" in descriptors and "floor_contact" in descriptors:
+        def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
+            angle_descriptor = signal[:, 0]
+            average_angle_descriptor = np.asarray([float(angle_descriptor.sum()) / len(angle_descriptor)])
+            floor_contact_descriptor = signal[:, 1]
+            average_floor_contact = np.asarray([float(floor_contact_descriptor.sum()) / len(floor_contact_descriptor)])
+            return np.concatenate([average_angle_descriptor, average_floor_contact])
+    elif "floor_contact" in descriptors:
         def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
             descriptors_without_floor_contact = signal[:, :signal.shape[1] - 1]
             floor_contact = signal[:, signal.shape[1] - 1]
@@ -42,6 +49,7 @@ def _get_descriptors_extractor_function(descriptors: str) -> Callable[[Dict[str,
                             "angle",
                             "object_velocity", "object_velocity_x", "object_velocity_y",
                             "object_position", "object_position_x", "object_position_y",
+                            "object_angle",
                             "floor_contact", "walls_contact"]
     for d in descriptors:
         assert d in existing_descriptors

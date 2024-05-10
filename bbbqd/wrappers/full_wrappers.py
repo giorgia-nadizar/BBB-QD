@@ -3,7 +3,7 @@ from __future__ import annotations
 from bbbqd.wrappers.action_wrappers import *
 from bbbqd.wrappers.observation_wrappers import *
 from bbbqd.wrappers.qd_wrappers import CenterVelocityWrapper, CenterPositionWrapper, CenterAngleWrapper, \
-    FloorContactWrapper, ObjectVelocityWrapper, ObjectPositionWrapper, WallsContactWrapper
+    FloorContactWrapper, ObjectVelocityWrapper, ObjectPositionWrapper, WallsContactWrapper, ObjectAngleWrapper
 
 
 class FullWrapper(gym.Wrapper):
@@ -21,6 +21,8 @@ class FullWrapper(gym.Wrapper):
                 self.env = ObjectPositionWrapper(self.env)
             if "angle" in qd_wrappers:
                 self.env = CenterAngleWrapper(self.env)
+            if "object_angle" in qd_wrappers:
+                self.env = ObjectAngleWrapper(self.env)
             if "floor_contact" in qd_wrappers:
                 self.env = FloorContactWrapper(self.env)
             if "walls_contact" in qd_wrappers:
