@@ -249,8 +249,6 @@ if __name__ == '__main__':
         "fixed_body": False,
         "graph_descriptors": "function_arities",
         "body_descriptors": ["elongation", "relative_activity"],
-
-        "pool_size" : 10
     }
 
     counter = 0
