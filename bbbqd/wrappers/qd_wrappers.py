@@ -52,8 +52,9 @@ class ObjectAngleWrapper(gym.Wrapper):
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         obs, reward, done, info = super().step(action)
         original_angle = self.env.get_ort_obs("package")
-        angle = original_angle + np.pi if original_angle <= np.pi else original_angle - np.pi
-        info["object_angle"] = np.abs(angle)
+        angle = np.abs(original_angle - np.pi)
+        info["object_angle"] = angle / np.pi
+        print(angle, info["object_angle"])
         return obs, reward, done, info
 
 
