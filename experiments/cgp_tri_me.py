@@ -201,9 +201,9 @@ def run_body_evo_me(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     # seeds = range(10)
-    # samplers = ["all", "s1", "s2", "s3"]
-    seeds = [0]
-    samplers = ["all"]
+    samplers = ["all", "s1", "s2", "s3"]
+    seeds = range(5)
+    # samplers = ["all"]
     envs_descriptors = {
         # "Walker-v0": {
         #     "behavior_descriptors": ["velocity_y", "floor_contact"],
