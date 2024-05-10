@@ -54,7 +54,6 @@ class ObjectAngleWrapper(gym.Wrapper):
         original_angle = self.env.get_ort_obs("package")
         angle = np.abs(original_angle - np.pi)
         info["object_angle"] = angle / np.pi
-        print(angle, info["object_angle"])
         return obs, reward, done, info
 
 
