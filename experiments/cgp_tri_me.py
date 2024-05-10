@@ -216,9 +216,8 @@ if __name__ == '__main__':
         #     "frequency_cut_off": 0.5
         # },
         "CustomCarrier-v0": {
-            "behavior_descriptors": ["object_velocity_y", "floor_contact"],
-            "qd_wrappers": ["object_velocity", "floor_contact"],
-            "frequency_cut_off": 0.5
+            "behavior_descriptors": ["object_angle", "floor_contact"],
+            "qd_wrappers": ["object_angle", "floor_contact"],
         }
     }
 
@@ -250,6 +249,8 @@ if __name__ == '__main__':
         "fixed_body": False,
         "graph_descriptors": "function_arities",
         "body_descriptors": ["elongation", "relative_activity"],
+
+        "pool_size" : 10
     }
 
     counter = 0
@@ -262,7 +263,7 @@ if __name__ == '__main__':
                 cfg["sampler"] = sampler
                 cfg["env_name"] = env
                 cfg[
-                    "run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-{env.replace('_v0', '').lower()}-{sampler}"
+                    "run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-{env.replace('-v0', '').lower()}-{sampler}"
                 cfg.update(envs_descriptors[env])
                 print(
                     f"{counter}/{len(seeds) * len(samplers) * len(envs_descriptors)} -> evo-body-"
