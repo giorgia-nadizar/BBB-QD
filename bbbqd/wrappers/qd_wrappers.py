@@ -79,10 +79,10 @@ class WallsContactWrapper(gym.Wrapper):
         left_contact_ys = masses_positions[1][masses_positions[0] <= (self.left_wall + self.offset)]
         right_contact_ys = masses_positions[1][masses_positions[0] >= (self.right_wall - self.offset)]
         if len(left_contact_ys) == 0 or len(right_contact_ys) == 0:
-            info["walls_contact"] = None
+            info["walls_contact"] = np.asarray([None])
         else:
             avg_left_contact_y = np.mean(left_contact_ys)
             avg_right_contact_y = np.mean(right_contact_ys)
             angle = (avg_right_contact_y - avg_left_contact_y) / (self.right_wall - self.left_wall)
-            info["walls_contact"] = np.abs(angle)
+            info["walls_contact"] = np.asarray([np.abs(angle)])
         return obs, reward, done, info
