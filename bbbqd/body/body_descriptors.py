@@ -45,8 +45,8 @@ def _bounding_box_limits(body: np.ndarray) -> Tuple[int, int, int, int]:
     cols = np.any(body, axis=0)
     ys = np.where(rows)[0]
     xs = np.where(cols)[0]
-    y_min, y_max = 0, 0 if len(ys) == 0 else ys[[0, -1]]
-    x_min, x_max = 0, 0 if len(xs) == 0 else xs[[0, -1]]
+    y_min, y_max = (0, 0) if len(ys) == 0 else ys[[0, -1]]
+    x_min, x_max = (0, 0) if len(xs) == 0 else xs[[0, -1]]
 
     return x_min, x_max, y_min, y_max
 
