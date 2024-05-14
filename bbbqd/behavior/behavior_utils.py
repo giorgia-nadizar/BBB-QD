@@ -67,12 +67,12 @@ def _get_descriptors_extractor_function(descriptors: str) -> Callable[[Dict[str,
                 velocity_module = np.sqrt(x_y[:, 0] ** 2 + x_y[:, 1] ** 2)
                 velocity_module = velocity_module.reshape(len(velocity_module), 1)
                 descriptors_data.append(velocity_module)
-            elif "x" in descriptor:
+            elif "_x" in descriptor:
                 descriptor_data = info[descriptor.replace("_x", "")]
                 descriptor_data = descriptor_data.reshape(-1, descriptor_data.shape[-1])
                 descriptor_data_x = descriptor_data[:, 0]
                 descriptors_data.append(descriptor_data_x.reshape(len(descriptor_data_x), 1))
-            elif "y" in descriptor:
+            elif "_y" in descriptor:
                 descriptor_data = info[descriptor.replace("_y", "")]
                 descriptor_data = descriptor_data.reshape(-1, descriptor_data.shape[-1])
                 descriptor_data_y = descriptor_data[:, 1]
