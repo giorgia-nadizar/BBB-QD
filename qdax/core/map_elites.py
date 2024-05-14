@@ -44,10 +44,12 @@ class MAPElites:
         ],
         emitter: Emitter,
         metrics_function: Callable[[MapElitesRepertoire], Metrics],
+        invalidity_counter: Callable[[Genotype], int] = lambda genotype: 0,
     ) -> None:
         self._scoring_function = scoring_function
         self._emitter = emitter
         self._metrics_function = metrics_function
+        self._invalidity_counter = invalidity_counter
 
     # @partial(jax.jit, static_argnames=("self",))
     def init(
@@ -132,6 +134,8 @@ class MAPElites:
         genotypes, random_key = self._emitter.emit(
             repertoire, emitter_state, random_key
         )
+        # count number of invalid offspring
+        n_invalid_offspring = self._invalidity_counter(genotypes)
         # scores the offsprings
         fitnesses, descriptors, extra_scores, random_key = self._scoring_function(
             genotypes, random_key
@@ -152,6 +156,7 @@ class MAPElites:
 
         # update the metrics
         metrics = self._metrics_function(repertoire)
+        metrics["n_invalid_offspring"] = n_invalid_offspring
 
         return repertoire, emitter_state, metrics, random_key
 

@@ -59,14 +59,15 @@ class BiMAPElites(MAPElites):
         metrics_function: Callable[[MapElitesBiRepertoire], Metrics],
         descriptors_indexes1: jnp.ndarray,
         descriptors_indexes2: jnp.ndarray = jnp.asarray([]),
-        sampling_id_function: Callable[[MapElitesBiRepertoire], int] = lambda x: 0
+        sampling_id_function: Callable[[MapElitesBiRepertoire], int] = lambda x: 0,
+        invalidity_counter: Callable[[Genotype], int] = lambda genotype: 0,
 
         # Note: sampling id semantics
         # 0 = sample from both
         # 1 = sample from first
         # 2 = sample from second
     ) -> None:
-        super(BiMAPElites, self).__init__(scoring_function, emitter, metrics_function)
+        super(BiMAPElites, self).__init__(scoring_function, emitter, metrics_function, invalidity_counter)
         self._descriptors_indexes1 = descriptors_indexes1
         self._descriptors_indexes2 = descriptors_indexes2
         self._sampling_id_function = sampling_id_function
@@ -127,6 +128,8 @@ class BiMAPElites(MAPElites):
         offspring, random_key = self._emitter.emit(
             bi_repertoire, emitter_state, random_key
         )
+        # count number of invalid offspring
+        n_invalid_offspring = self._invalidity_counter(offspring)
         # scores the offspring
         fitnesses, descriptors, extra_scores, random_key = self._scoring_function(
             offspring, random_key
@@ -147,5 +150,6 @@ class BiMAPElites(MAPElites):
 
         # update the metrics
         metrics = self._metrics_function(bi_repertoire)
+        metrics["n_invalid_offspring"] = n_invalid_offspring
 
         return bi_repertoire, emitter_state, metrics, random_key
