@@ -213,7 +213,8 @@ if __name__ == '__main__':
         # "Climber-v0": {
         #     "behavior_descriptors": ["velocity_x", "walls_contact"],
         #     "qd_wrappers": ["velocity", "walls_contact"],
-        #     "frequency_cut_off": 0.5
+        #     "frequency_cut_off": 0.5,
+        #     "body_shift": True
         # },
         "CustomCarrier-v0": {
             "behavior_descriptors": ["object_angle", "floor_contact"],
