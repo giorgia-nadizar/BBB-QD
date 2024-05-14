@@ -36,8 +36,9 @@ def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
             walls_contact = signal[:, signal.shape[1] - 1]
             processed_descriptors = fft_behavior_descriptors_computing_fn(descriptors_without_walls_contact)
             walls_contact_filtered = walls_contact[walls_contact != np.array(None)]
-            average_walls_contact = np.asarray([float(walls_contact_filtered.sum()) / len(walls_contact_filtered)])
-            return np.concatenate([processed_descriptors, average_walls_contact])
+            average_walls_contact = 0. if len(walls_contact_filtered) == 0 \
+                else float(walls_contact_filtered.sum()) / len(walls_contact_filtered)
+            return np.concatenate([processed_descriptors, np.asarray([average_walls_contact])])
     else:
         behavior_descriptors_computing_fn = fft_behavior_descriptors_computing_fn
     return descriptors_extractor_fn, behavior_descriptors_computing_fn
