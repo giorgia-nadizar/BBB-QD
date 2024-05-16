@@ -19,6 +19,7 @@ from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask,
 from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
+from bbbqd.core.validation import count_invalid_bodies, validate_body_width
 from bbbqd.wrappers import make_env
 from qdax.core.emitters.standard_emitters import MixingEmitter
 from qdax.core.gp.encoding import compute_encoding_function
@@ -60,21 +61,6 @@ def run_body_evo_me(config: Dict[str, Any]):
     controller_mutation_mask = compute_mutation_mask(config, config["n_out"])
     mutation_mask = jnp.concatenate([body_mutation_mask, controller_mutation_mask])
 
-    random_key, pop_key = jax.random.split(random_key)
-    if config.get("fixed_outputs", False):
-        fixed_outputs = jnp.arange(start=config["buffer_size"] - config["n_out"], stop=config["buffer_size"], step=1)
-        population = generate_population(
-            pop_size=config["parents_size"],
-            genome_mask=genome_mask,
-            rnd_key=pop_key,
-            fixed_genome_trailing=fixed_outputs,
-            float_header_length=body_float_length
-        )
-        config["p_mut_outputs"] = 0
-    else:
-        population = generate_population(pop_size=config["parents_size"], genome_mask=genome_mask, rnd_key=pop_key,
-                                         float_header_length=body_float_length)
-
     # Define encoding function
     program_encoding_fn = compute_encoding_function(config)
 
@@ -88,6 +74,44 @@ def run_body_evo_me(config: Dict[str, Any]):
     brain_descr_fn, _ = get_graph_descriptor_extractor(config)
     body_descr_fn, _ = get_body_descriptor_extractor(config)
     behavior_descr_fns = get_behavior_descriptors_functions(config)
+
+    random_key, pop_key = jax.random.split(random_key)
+    if config.get("fixed_outputs", False):
+        fixed_outputs = jnp.arange(start=config["buffer_size"] - config["n_out"], stop=config["buffer_size"], step=1)
+        population_generation_fn = partial(generate_population,
+                                           genome_mask=genome_mask,
+                                           rnd_key=pop_key,
+                                           fixed_genome_trailing=fixed_outputs,
+                                           float_header_length=body_float_length)
+        config["p_mut_outputs"] = 0
+    else:
+        population_generation_fn = partial(generate_population,
+                                           genome_mask=genome_mask,
+                                           rnd_key=pop_key,
+                                           float_header_length=body_float_length)
+
+    population = population_generation_fn(config["parents_size"])
+
+    # Create invalid checker function
+    if "Climber" in config["env_name"]:
+        invalidity_counter_fn = partial(count_invalid_bodies, body_genome_size=len(body_mask) + body_float_length,
+                                        body_encoding_fn=body_encoding_fn, max_body_width=5)
+        validity_checker = partial(validate_body_width, body_genome_size=len(body_mask) + body_float_length,
+                                   body_encoding_fn=body_encoding_fn, max_body_width=5)
+        # ensure initial population is all valid
+        additional_population_samples = population_generation_fn(10 * config["parents_size"])
+        valid_population = []
+        for g in population:
+            if validity_checker(g):
+                valid_population.append(g)
+        for g in additional_population_samples:
+            if len(valid_population) == config["parents_size"]:
+                break
+            if validity_checker(g):
+                valid_population.append(g)
+        population = jnp.asarray(valid_population)
+    else:
+        invalidity_counter_fn = lambda _: 0
 
     # Create evaluation function
     evaluation_fn = partial(evaluate_controller_and_body, config=config, descriptors_functions=behavior_descr_fns)
@@ -150,7 +174,8 @@ def run_body_evo_me(config: Dict[str, Any]):
         descriptors_indexes1=jnp.asarray([0, 1]),
         descriptors_indexes2=jnp.asarray([2, 3]),
         descriptors_indexes3=jnp.asarray([4, 5]),
-        sampling_id_function=sampling_id_fn
+        sampling_id_function=sampling_id_fn,
+        invalidity_counter=invalidity_counter_fn
     )
 
     brain_centroids = jnp.load("data/brain_centroids.npy")
@@ -167,7 +192,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     )
 
     headers = ["iteration", "max_fitness", "qd_score1", "qd_score2", "qd_score3", "coverage1", "coverage2", "coverage3",
-               "time", "current_time"]
+               "time", "current_time", "invalid_individuals"]
 
     name = f"{config.get('run_name', 'trial')}_{config['seed']}"
 
@@ -186,11 +211,13 @@ def run_body_evo_me(config: Dict[str, Any]):
         # log metrics
         logged_metrics = {"time": timelapse, "iteration": i + 1, "current_time": current_time,
                           "max_fitness": metrics["max_fitness"],
+                          "invalid_individuals": metrics["n_invalid_offspring"],
                           "qd_score1": metrics["qd_score1"], "coverage1": metrics["coverage1"],
                           "qd_score2": metrics["qd_score2"], "coverage2": metrics["coverage2"],
                           "qd_score3": metrics["qd_score3"], "coverage3": metrics["coverage3"]}
 
         csv_logger.log(logged_metrics)
+        print(logged_metrics["invalid_individuals"])
         print(f"{i}\t{logged_metrics['max_fitness']}")
 
     os.makedirs(f"../results/me/{name}/", exist_ok=True)
@@ -210,16 +237,16 @@ if __name__ == '__main__':
         #     "qd_wrappers": ["velocity", "floor_contact"],
         #     "frequency_cut_off": 0.5
         # },
-        # "Climber-v0": {
-        #     "behavior_descriptors": ["velocity_x", "walls_contact"],
-        #     "qd_wrappers": ["velocity", "walls_contact"],
-        #     "frequency_cut_off": 0.5,
-        #     "body_shift": True
-        # },
-        "CustomCarrier-v0": {
-            "behavior_descriptors": ["object_angle", "floor_contact"],
-            "qd_wrappers": ["object_angle", "floor_contact"],
-        }
+        "Climber-v0": {
+            "behavior_descriptors": ["velocity_x", "walls_contact"],
+            "qd_wrappers": ["velocity", "walls_contact"],
+            "frequency_cut_off": 0.5,
+            "body_trim": True
+        },
+        # "CustomCarrier-v0": {
+        #     "behavior_descriptors": ["object_angle", "floor_contact"],
+        #     "qd_wrappers": ["object_angle", "floor_contact"],
+        # }
     }
 
     base_cfg = {
