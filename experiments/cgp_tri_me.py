@@ -201,6 +201,7 @@ def run_body_evo_me(config: Dict[str, Any]):
         header=headers
     )
 
+    fitness_evaluations = 0
     for i in range(config["n_iterations"]):
         start_time = time.time()
         # main iterations
@@ -217,7 +218,8 @@ def run_body_evo_me(config: Dict[str, Any]):
                           "qd_score3": metrics["qd_score3"], "coverage3": metrics["coverage3"]}
 
         csv_logger.log(logged_metrics)
-        print(logged_metrics["invalid_individuals"])
+        # print(logged_metrics["invalid_individuals"])
+        fitness_evaluations = fitness_evaluations + config["parents_size"] - logged_metrics["invalid_individuals"]
         print(f"{i}\t{logged_metrics['max_fitness']}")
 
     os.makedirs(f"../results/me/{name}/", exist_ok=True)
@@ -225,12 +227,35 @@ def run_body_evo_me(config: Dict[str, Any]):
     with open(f"../results/me/{name}/config.yaml", "w") as file:
         yaml.dump(config, file)
 
+    i = config["n_iterations"]
+    while fitness_evaluations < (config["n_iterations"] * config["parents_size"]):
+        start_time = time.time()
+        # main iterations
+        repertoire, emitter_state, metrics, random_key = tri_map_elites.update(repertoire, emitter_state, random_key)
+        timelapse = time.time() - start_time
+        current_time = datetime.now()
+
+        # log metrics
+        logged_metrics = {"time": timelapse, "iteration": i + 1, "current_time": current_time,
+                          "max_fitness": metrics["max_fitness"],
+                          "invalid_individuals": metrics["n_invalid_offspring"],
+                          "qd_score1": metrics["qd_score1"], "coverage1": metrics["coverage1"],
+                          "qd_score2": metrics["qd_score2"], "coverage2": metrics["coverage2"],
+                          "qd_score3": metrics["qd_score3"], "coverage3": metrics["coverage3"]}
+
+        csv_logger.log(logged_metrics)
+        # print(logged_metrics["invalid_individuals"])
+        fitness_evaluations = fitness_evaluations + config["parents_size"] - logged_metrics["invalid_individuals"]
+        print(f"{i}\t{logged_metrics['max_fitness']}")
+
+    repertoire.save(f"../results/me/{name}/extra_")
+
 
 if __name__ == '__main__':
     # seeds = range(10)
-    samplers = ["all", "s1", "s2", "s3"]
-    seeds = range(5)
-    # samplers = ["all"]
+    # samplers = ["all", "s1", "s2", "s3"]
+    seeds = range(1)
+    samplers = ["all"]
     envs_descriptors = {
         # "Walker-v0": {
         #     "behavior_descriptors": ["velocity_y", "floor_contact"],
