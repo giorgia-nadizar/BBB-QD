@@ -38,7 +38,9 @@ def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
             walls_contact_filtered = walls_contact[walls_contact != np.array(None)]
             average_walls_contact = 0. if len(walls_contact_filtered) == 0 \
                 else float(walls_contact_filtered.sum()) / len(walls_contact_filtered)
-            return np.concatenate([processed_descriptors, np.asarray([average_walls_contact])])
+            walls_contact_max = config.get("walls_contact_max", np.pi / 3)
+            normalized_average_walls_contact = min(average_walls_contact, walls_contact_max) / walls_contact_max
+            return np.concatenate([processed_descriptors, np.asarray([normalized_average_walls_contact])])
     else:
         behavior_descriptors_computing_fn = fft_behavior_descriptors_computing_fn
     return descriptors_extractor_fn, behavior_descriptors_computing_fn

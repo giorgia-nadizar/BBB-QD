@@ -83,6 +83,7 @@ class WallsContactWrapper(gym.Wrapper):
         else:
             avg_left_contact_y = np.mean(left_contact_ys)
             avg_right_contact_y = np.mean(right_contact_ys)
-            angle = (avg_right_contact_y - avg_left_contact_y) / (self.right_wall - self.left_wall)
-            info["walls_contact"] = np.asarray([np.abs(angle)])
+            slope = (avg_right_contact_y - avg_left_contact_y) / (self.right_wall - self.left_wall)
+            angle = np.arctan(np.abs(slope))
+            info["walls_contact"] = np.asarray([angle])
         return obs, reward, done, info
