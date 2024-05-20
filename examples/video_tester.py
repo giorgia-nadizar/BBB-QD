@@ -109,23 +109,32 @@ if __name__ == '__main__':
     # collage.write_videofile(f"../videos/evo-body-5x5-me_{seed}.mp4", fps=24, codec='mpeg4')
 
     # videos for behavior analysis
+    task = "climber"
+    repertoire_prefix = "r3_"
+    if task == "climber":
+        repertoire_prefix = "extra_" + repertoire_prefix
+    base_info = f"evo-body-10x10-{task}"
+    # best video
+    results_path = f"../results/me/{base_info}-all_{seed}"
+    video_file_path = f"../videos/{task}_best_{seed}.avi"
+    make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix=repertoire_prefix, )
+    # centroids video
     centroids_names = {
-        567: "low-x+high-y",
-        121: "high-x+high-y",
-        796: "high-x+low-y",
-        447: "low-x+low-y",
+        413: "low-x+high-y",
+        5: "high-x+high-y",
+        866: "high-x+low-y",
+        981: "low-x+low-y",
     }
     for centroid, name in centroids_names.items():
         print(centroid)
         print(name)
-        base_info = "evo-body-10x10-floor"
         results_path = f"../results/me/{base_info}-all_{seed}"
-        video_file_path = f"../videos/behavior_{name}_{seed}.avi"
-        make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix="r3_",
+        video_file_path = f"../videos/{task}_behavior_{name}_{seed}.avi"
+        make_video(results_path, render=False, video_file_name=video_file_path, extra_prefix=repertoire_prefix,
                    position=centroid)
-    video_clips = [[VideoFileClip(f"../videos/behavior_low-x+high-y_{seed}.avi"),
-                    VideoFileClip(f"../videos/behavior_high-x+high-y_{seed}.avi")],
-                   [VideoFileClip(f"../videos/behavior_low-x+low-y_{seed}.avi"),
-                    VideoFileClip(f"../videos/behavior_high-x+low-y_{seed}.avi")]]
+    video_clips = [[VideoFileClip(f"../videos/{task}_behavior_low-x+high-y_{seed}.avi"),
+                    VideoFileClip(f"../videos/{task}_behavior_high-x+high-y_{seed}.avi")],
+                   [VideoFileClip(f"../videos/{task}_behavior_low-x+low-y_{seed}.avi"),
+                    VideoFileClip(f"../videos/{task}_behavior_high-x+low-y_{seed}.avi")]]
     collage = clips_array(video_clips)
-    collage.write_videofile(f"../videos/behavior_{seed}.mp4", fps=24, codec='mpeg4')
+    collage.write_videofile(f"../videos/{task}_behavior_{seed}.mp4", fps=24, codec='mpeg4')
