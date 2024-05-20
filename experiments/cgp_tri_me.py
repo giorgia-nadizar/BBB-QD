@@ -247,6 +247,7 @@ def run_body_evo_me(config: Dict[str, Any]):
         # print(logged_metrics["invalid_individuals"])
         fitness_evaluations = fitness_evaluations + config["parents_size"] - logged_metrics["invalid_individuals"]
         print(f"{i}\t{logged_metrics['max_fitness']}")
+        i += 1
 
     repertoire.save(f"../results/me/{name}/extra_")
 
