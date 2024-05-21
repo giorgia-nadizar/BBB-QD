@@ -145,30 +145,31 @@ def run_ga(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     bodies = {
-        "biped-5x4": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 0, 3, 3], [3, 3, 0, 3, 3]],
-        "worm-5x2": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3]],
-        "tripod-5x5": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 0, 3, 0, 3], [3, 0, 3, 0, 3], [3, 0, 3, 0, 3]],
-        "block-5x5": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3]]
+        "climber-5x4": [[0, 1, 3, 3, 3], [4, 2, 4, 1, 4], [0, 0, 3, 4, 0], [3, 3, 1, 1, 3]],
+        # "biped-5x4": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 0, 3, 3], [3, 3, 0, 3, 3]],
+        # "worm-5x2": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3]],
+        # "tripod-5x5": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 0, 3, 0, 3], [3, 0, 3, 0, 3], [3, 0, 3, 0, 3]],
+        # "block-5x5": [[3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3], [3, 3, 3, 3, 3]]
     }
-    seeds = range(10)
-    controllers = ["global", "local", "local2"]
+    seeds = range(2)
+    controllers = ["global", "local"]  # , "local2"]
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
         "p_mut_functions": 0.1,
         "p_mut_outputs": 0.3,
         "solver": "cgp",
-        "env_name": "Walker-v0",
+        "env_name": "Climber-v0",
         "episode_length": 200,
         "pop_size": 50,
         "parents_size": 45,
-        "n_iterations": 500,
+        "n_iterations": 1000,
         "fixed_outputs": True,
         "flags": {
             "observe_voxel_vel": True,
             "observe_voxel_volume": True,
             "observe_time": False,
-            "observation_range": 2
+            "observation_range": 1
         },
         "jax": True,
         "program_wrapper": True,
