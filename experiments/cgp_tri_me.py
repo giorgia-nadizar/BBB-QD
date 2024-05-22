@@ -264,9 +264,8 @@ if __name__ == '__main__':
         #     "frequency_cut_off": 0.5
         # },
         "Climber-v0": {
-            "behavior_descriptors": ["velocity_x", "walls_contact"],
-            "qd_wrappers": ["velocity", "walls_contact"],
-            "frequency_cut_off": 0.5,
+            "behavior_descriptors": ["floor_contact", "walls_contact"],
+            "qd_wrappers": ["floor_contact", "walls_contact"],
             "body_trim": True
         },
         # "CustomCarrier-v0": {
