@@ -1,79 +1,50 @@
 from functools import partial
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Dict, Tuple, List
 
 import numpy as np
 
-from bbbqd.behavior.behavior_descriptors import _compute_spectra, _signal_peak, _signal_median
+from bbbqd.behavior.behavior_descriptors import _signal_peak, _signal_median, _compute_spectrum
+
+existing_descriptors = ["velocity", "velocity_x", "velocity_y", "velocity_angle", "velocity_module",
+                        "position", "position_x", "position_y",
+                        "angle",
+                        "object_velocity", "object_velocity_x", "object_velocity_y",
+                        "object_position", "object_position_x", "object_position_y",
+                        "object_angle",
+                        "floor_contact", "walls_contact"]
 
 
 def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
     Callable[[Dict[str, Any]], np.ndarray], Callable[[np.ndarray], np.ndarray]]:
-    descriptors = config["behavior_descriptors"]
-    processing = config.get("behavior_descriptors_processing", "median")
-    if isinstance(descriptors, str):
-        descriptors = [descriptors]
-    descriptors_extractor_fn = _get_descriptors_extractor_function(descriptors)
-    cut_off = config.get("frequency_cut_off", 0.4)
-    fft_behavior_descriptors_computing_fn = _get_behavior_descriptors_computing_function(processing,
-                                                                                         cut_off=cut_off)
-    if "object_angle" in descriptors and "floor_contact" in descriptors:
-        def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
-            angle_descriptor = signal[:, 0]
-            average_angle_descriptor = np.asarray([float(angle_descriptor.sum()) / len(angle_descriptor)])
-            floor_contact_descriptor = signal[:, 1]
-            average_floor_contact = np.asarray([float(floor_contact_descriptor.sum()) / len(floor_contact_descriptor)])
-            return np.concatenate([average_angle_descriptor, average_floor_contact])
+    config_descriptors = config["behavior_descriptors"]
 
-    elif "floor_contact" in descriptors and "walls_contact" in descriptors:
-        def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
-            floor_contact_descriptor = signal[:, 0]
-            average_floor_contact = np.asarray([float(floor_contact_descriptor.sum()) / len(floor_contact_descriptor)])
+    if isinstance(config_descriptors, str):
+        config_descriptors = [config_descriptors]
 
-            walls_contact = signal[:, 1]
-            walls_contact_filtered = walls_contact[walls_contact != np.array(None)]
-            average_walls_contact = 0. if len(walls_contact_filtered) == 0 \
-                else float(walls_contact_filtered.sum()) / len(walls_contact_filtered)
-            walls_contact_max = config.get("walls_contact_max", np.pi / 3)
-            normalized_average_walls_contact = np.asarray(
-                [min(average_walls_contact, walls_contact_max) / walls_contact_max]
-            )
-
-            return np.concatenate([average_floor_contact, normalized_average_walls_contact])
-
-    elif "floor_contact" in descriptors:
-        def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
-            descriptors_without_floor_contact = signal[:, :signal.shape[1] - 1]
-            floor_contact = signal[:, signal.shape[1] - 1]
-            processed_descriptors = fft_behavior_descriptors_computing_fn(descriptors_without_floor_contact)
-            average_floor_contact = np.asarray([float(floor_contact.sum()) / len(floor_contact)])
-            return np.concatenate([processed_descriptors, average_floor_contact])
-    elif "walls_contact" in descriptors:
-        def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
-            descriptors_without_walls_contact = signal[:, :signal.shape[1] - 1]
-            walls_contact = signal[:, signal.shape[1] - 1]
-            processed_descriptors = fft_behavior_descriptors_computing_fn(descriptors_without_walls_contact)
-            walls_contact_filtered = walls_contact[walls_contact != np.array(None)]
-            average_walls_contact = 0. if len(walls_contact_filtered) == 0 \
-                else float(walls_contact_filtered.sum()) / len(walls_contact_filtered)
-            walls_contact_max = config.get("walls_contact_max", np.pi / 3)
-            normalized_average_walls_contact = min(average_walls_contact, walls_contact_max) / walls_contact_max
-            return np.concatenate([processed_descriptors, np.asarray([normalized_average_walls_contact])])
-    else:
-        behavior_descriptors_computing_fn = fft_behavior_descriptors_computing_fn
-    return descriptors_extractor_fn, behavior_descriptors_computing_fn
-
-
-def _get_descriptors_extractor_function(descriptors: str) -> Callable[[Dict[str, Any]], np.ndarray]:
-    existing_descriptors = ["velocity", "velocity_x", "velocity_y", "velocity_angle", "velocity_module",
-                            "position", "position_x", "position_y",
-                            "angle",
-                            "object_velocity", "object_velocity_x", "object_velocity_y",
-                            "object_position", "object_position_x", "object_position_y",
-                            "object_angle",
-                            "floor_contact", "walls_contact"]
-    for d in descriptors:
+    descriptors = []
+    for d in config_descriptors:
         assert d in existing_descriptors
+        if f"{d}_x" in existing_descriptors and f"{d}_y" in existing_descriptors:
+            descriptors.extend([f"{d}_x", f"{d}_y"])
+        else:
+            descriptors.append(d)
+    descriptors_processing_functions = [_get_descriptor_processing_fn(descriptor, config) for descriptor in descriptors]
 
+    descriptors_extractor_fn = _get_descriptors_extractor_function(descriptors)
+
+    def _behavior_descriptors_computing_fn(raw_descriptors: np.ndarray) -> np.ndarray:
+        if raw_descriptors.shape[1] != len(descriptors):
+            raise AttributeError("Descriptor processing for multi-dimensional descriptors not implemented.")
+        processed_descriptors = []
+        for desc_id, processing_fn in enumerate(descriptors_processing_functions):
+            descriptor_signal = raw_descriptors[:, desc_id]
+            processed_descriptors.append(processing_fn(descriptor_signal))
+        return np.array(processed_descriptors)
+
+    return descriptors_extractor_fn, _behavior_descriptors_computing_fn
+
+
+def _get_descriptors_extractor_function(descriptors: List[str]) -> Callable[[Dict[str, Any]], np.ndarray]:
     def _descriptors_extractor(info: Dict[str, Any]) -> np.ndarray:
         descriptors_data = []
         for descriptor in descriptors:
@@ -105,10 +76,34 @@ def _get_descriptors_extractor_function(descriptors: str) -> Callable[[Dict[str,
     return _descriptors_extractor
 
 
-def _get_behavior_descriptors_computing_function(processing: str, cut_off: float) -> Callable[[np.ndarray], np.ndarray]:
+def _get_descriptor_processing_fn(descriptor: str, config: Dict) -> Callable[[np.ndarray], float]:
+    if descriptor == "object_angle":
+        return lambda angle_descriptor: float(angle_descriptor.sum()) / len(angle_descriptor)
+    elif descriptor == "floor_contact":
+        return lambda floor_contact: float(floor_contact.sum()) / len(floor_contact)
+    elif descriptor == "walls_contact":
+        return _get_walls_contact_fn(config)
+    else:
+        return _get_fft_fn(config)
+
+
+def _get_fft_fn(config: Dict) -> Callable[[np.ndarray], float]:
+    processing = config.get("behavior_descriptors_processing", "median")
+    cut_off = config.get("frequency_cut_off", 0.4)
     allowed_values = ["median", "peak"]
     if processing not in allowed_values:
         raise ValueError(f"Processing should be in {allowed_values}, got {processing}")
-    processing_fn = partial(_signal_median if processing == "median" else _signal_peak,
-                            cut_off=cut_off)
-    return lambda signals: np.asarray([processing_fn(s) for s in _compute_spectra(signals)])
+    processing_fn = partial(_signal_median if processing == "median" else _signal_peak, cut_off=cut_off)
+    return lambda signal: processing_fn(_compute_spectrum(signal))
+
+
+def _get_walls_contact_fn(config: Dict) -> Callable[[np.ndarray], float]:
+    walls_contact_max = config.get("walls_contact_max", np.pi / 3)
+
+    def _walls_contact_fn(walls_contact: np.ndarray) -> float:
+        walls_contact_filtered = walls_contact[walls_contact != np.array(None)]
+        average_walls_contact = 0. if len(walls_contact_filtered) == 0 \
+            else float(walls_contact_filtered.sum()) / len(walls_contact_filtered)
+        return min(average_walls_contact, walls_contact_max) / walls_contact_max
+
+    return _walls_contact_fn
