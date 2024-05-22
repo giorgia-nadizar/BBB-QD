@@ -23,6 +23,23 @@ def get_behavior_descriptors_functions(config: Dict[str, Any]) -> Tuple[
             floor_contact_descriptor = signal[:, 1]
             average_floor_contact = np.asarray([float(floor_contact_descriptor.sum()) / len(floor_contact_descriptor)])
             return np.concatenate([average_angle_descriptor, average_floor_contact])
+
+    elif "floor_contact" in descriptors and "walls_contact" in descriptors:
+        def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
+            floor_contact_descriptor = signal[:, 0]
+            average_floor_contact = np.asarray([float(floor_contact_descriptor.sum()) / len(floor_contact_descriptor)])
+
+            walls_contact = signal[:, 1]
+            walls_contact_filtered = walls_contact[walls_contact != np.array(None)]
+            average_walls_contact = 0. if len(walls_contact_filtered) == 0 \
+                else float(walls_contact_filtered.sum()) / len(walls_contact_filtered)
+            walls_contact_max = config.get("walls_contact_max", np.pi / 3)
+            normalized_average_walls_contact = np.asarray(
+                [min(average_walls_contact, walls_contact_max) / walls_contact_max]
+            )
+
+            return np.concatenate([average_floor_contact, normalized_average_walls_contact])
+
     elif "floor_contact" in descriptors:
         def behavior_descriptors_computing_fn(signal: np.ndarray) -> np.ndarray:
             descriptors_without_floor_contact = signal[:, :signal.shape[1] - 1]
