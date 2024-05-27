@@ -12,7 +12,7 @@ from typing import Tuple, Dict, Any
 import numpy as np
 import yaml
 
-from bbbqd.behavior.behavior_utils import get_behavior_descriptors_functions
+from bbbqd.behavior.behavior_descriptors import get_behavior_descriptors_functions
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
 from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function, \
     compute_body_float_genome_length

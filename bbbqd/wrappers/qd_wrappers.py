@@ -4,6 +4,8 @@ import gym
 import numpy as np
 from gym.core import ActType, ObsType
 
+from bbbqd.behavior.behavior_utils import detect_ground_contact
+
 
 class CenterVelocityWrapper(gym.Wrapper):
 
@@ -58,13 +60,17 @@ class ObjectAngleWrapper(gym.Wrapper):
 
 
 class FloorContactWrapper(gym.Wrapper):
-    floor_level: float = 0.1
     offset: float = 0.005
+    side_length: float = 0.1
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         obs, reward, done, info = super().step(action)
-        masses_positions = self.env.object_pos_at_time(self.env.get_time(), "robot")
-        info["floor_contact"] = np.asarray([np.min(masses_positions[1]) <= (self.floor_level + self.offset)])
+        ground_contact = detect_ground_contact(self.env.object_pos_at_time(self.env.get_time(), "robot"),
+                                               self.env.object_pos_at_time(self.env.get_time(), "ground"),
+                                               side=self.side_length,
+                                               offset=self.offset)
+        print(ground_contact)
+        info["floor_contact"] = np.asarray([ground_contact])
         return obs, reward, done, info
 
 
