@@ -1,14 +1,15 @@
 import gym
 import numpy as np
-from typing import Union
+from typing import Union, Dict, List
 
 from evogym.envs import EvoGymBase
 from gym import Env
 
 
-def extract_ground_profile_masses_ids(env: Union[EvoGymBase, Env, gym.Wrapper], side_length: float = 0.1):
+def extract_ground_profile_masses_ids(env: Union[EvoGymBase, Env, gym.Wrapper],
+                                      side_length: float = 0.1) -> Dict[str, List[int]]:
     # extract all ground masses
-    ground_masses_lists = []
+    ground_data_tuples = []
     allowed_ground_names = ["ground", "new_object_2", "terrain"]  # some envs have different names
     for i in range(1, 8):
         allowed_ground_names.append(f"platform_{i}")
@@ -16,14 +17,14 @@ def extract_ground_profile_masses_ids(env: Union[EvoGymBase, Env, gym.Wrapper], 
         try:
             masses = env.object_pos_at_time(env.get_time(), ground_name)
             structure = env.world.objects[ground_name].get_structure()
-            ground_masses_lists.append((masses, structure))
+            ground_data_tuples.append((ground_name, masses, structure))
         except ValueError:
             pass
-    assert len(ground_masses_lists) > 0
+    assert len(ground_data_tuples) > 0
 
     # extract ids of masses
-    ground_masses_ids = []
-    for ground_masses, ground_structure in ground_masses_lists:
+    ground_masses_ids = {}
+    for ground_name, ground_masses, ground_structure in ground_data_tuples:
         current_profile = []
 
         structure_column_idx = -1
@@ -70,6 +71,6 @@ def extract_ground_profile_masses_ids(env: Union[EvoGymBase, Env, gym.Wrapper], 
 
         current_profile_ids = [np.where((ground_masses[0] == m[0]) & (ground_masses[1] == m[1]))[0][0].astype(int)
                                for m in current_profile]
-        ground_masses_ids.append(current_profile_ids)
+        ground_masses_ids[ground_name] = current_profile_ids
 
     return ground_masses_ids

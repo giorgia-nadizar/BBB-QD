@@ -1,4 +1,4 @@
-from typing import Tuple, Union, List, Any
+from typing import Tuple, Union, List, Any, Dict
 
 import gym
 import numpy as np
@@ -63,20 +63,25 @@ class ObjectAngleWrapper(gym.Wrapper):
 class FloorContactWrapper(gym.Wrapper):
     offset: float = 0.005
     side_length: float = 0.1
-    ground_masses_ids: List[List[Any]] = None
+    ground_data: Dict[str, List[int]] = None
 
     def reset(self, **kwargs) -> Union[ObsType, Tuple[ObsType, dict]]:
         reset_result = super().reset(**kwargs)
-        self.ground_masses_ids = extract_ground_profile_masses_ids(self.env, self.side_length)
+        self.ground_data = extract_ground_profile_masses_ids(self.env, self.side_length)
         return reset_result
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         obs, reward, done, info = super().step(action)
         robot_position = self.env.object_pos_at_time(self.env.get_time(), "robot")
         robot_structure = self.env.world.objects['robot'].get_structure()
-        ground = self.env.object_pos_at_time(self.env.get_time(), "ground")
-        ground_contact = detect_ground_contact(robot_position, robot_structure, ground, self.ground_masses_ids,
-                                               self.side_length, self.offset)
+        ground_contact = False
+        for ground_name in self.ground_data.keys():
+            ground = self.env.object_pos_at_time(self.env.get_time(), ground_name)
+            ground_masses_ids = self.ground_data[ground_name]
+            ground_contact = detect_ground_contact(robot_position, robot_structure, ground, ground_masses_ids,
+                                                   self.side_length, self.offset)
+            if ground_contact:
+                break
         info["floor_contact"] = np.asarray([ground_contact])
         return obs, reward, done, info
 

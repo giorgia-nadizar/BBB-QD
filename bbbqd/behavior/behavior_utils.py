@@ -8,34 +8,31 @@ def detect_ground_contact(
         robot: np.ndarray,
         robot_structure: np.ndarray,
         ground: np.ndarray,
-        ground_masses_ids: List[List[int]],
+        ground_ids: List[int],
         side: float = 0.1,
         offset: float = 0.005
 ):
     voxel_corners = None
-    for ground_ids in ground_masses_ids:
-        current_ground = ground[:, ground_ids]
+    current_ground = ground[:, ground_ids]
 
-        # trim terrain around robot
-        current_ground = _extract_local_ground(robot, current_ground, side)
+    # trim terrain around robot
+    current_ground = _extract_local_ground(robot, current_ground, side)
 
-        # check if terrain is flat locally around the robot
-        locally_flat, contact = _detect_ground_contact_flat_terrain(robot, current_ground, offset)
-        if locally_flat and contact:
-            return True
-        if locally_flat:
+    # check if terrain is flat locally around the robot
+    locally_flat, contact = _detect_ground_contact_flat_terrain(robot, current_ground, offset)
+    if locally_flat and contact:
+        return True
+
+    # if the terrain is not all flat, consider all voxels
+    voxel_corners = voxel_corners if voxel_corners is not None else structure_corners(robot, robot_structure,
+                                                                                      robot_structure.shape)
+    for voxel_corner in voxel_corners:
+        if voxel_corner is None:
             continue
-
-        # if the terrain is not all flat, consider all voxels
-        voxel_corners = voxel_corners if voxel_corners is not None else structure_corners(robot, robot_structure,
-                                                                                          robot_structure.shape)
-        for voxel_corner in voxel_corners:
-            if voxel_corner is None:
-                continue
-            voxel_corner_masses = np.asarray(voxel_corner).transpose()
-            voxel_contact = _detect_ground_contact_voxel(voxel_corner_masses, current_ground, side, offset)
-            if voxel_contact:
-                return True
+        voxel_corner_masses = np.asarray(voxel_corner).transpose()
+        voxel_contact = _detect_ground_contact_voxel(voxel_corner_masses, current_ground, side, offset)
+        if voxel_contact:
+            return True
 
     return False
 
