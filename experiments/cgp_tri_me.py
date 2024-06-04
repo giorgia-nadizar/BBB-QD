@@ -253,21 +253,33 @@ def run_body_evo_me(config: Dict[str, Any]):
 
 
 if __name__ == '__main__':
-    # seeds = range(10)
     # samplers = ["all", "s1", "s2", "s3"]
-    seeds = range(2, 3)
-    samplers = ["all", "s1", "s2", "s3"]
+    seeds = range(10)
+    samplers = ["all"]
+    envs = ["BridgeWalker-v0",
+            "Pusher-v0",
+            "UpStepper-v0",
+            "DownStepper-v0",
+            "ObstacleTraverser-v0",
+
+            "ObstacleTraverser-v1",
+            "Hurdler-v0",
+            "PlatformJumper-v0",
+            "GapJumper-v0",
+            "CaveCrawler-v0",
+            # "Carrier-v0"
+            ]
     envs_descriptors = {
         # "Walker-v0": {
         #     "behavior_descriptors": ["velocity_y", "floor_contact"],
         #     "qd_wrappers": ["velocity", "floor_contact"],
         #     "frequency_cut_off": 0.5
         # },
-        "Climber-v0": {
-            "behavior_descriptors": ["floor_contact", "walls_contact"],
-            "qd_wrappers": ["floor_contact", "walls_contact"],
-            "body_trim": True
-        },
+        # "Climber-v0": {
+        #    "behavior_descriptors": ["floor_contact", "walls_contact"],
+        #    "qd_wrappers": ["floor_contact", "walls_contact"],
+        #    "body_trim": True
+        # },
         # "CustomCarrier-v0": {
         #     "behavior_descriptors": ["object_angle", "floor_contact"],
         #     "qd_wrappers": ["object_angle", "floor_contact"],
@@ -302,21 +314,26 @@ if __name__ == '__main__':
         "fixed_body": False,
         "graph_descriptors": "function_arities",
         "body_descriptors": ["relative_activity", "elongation"],
+        "behavior_descriptors": ["velocity_y", "floor_contact"],
+        "qd_wrappers": ["velocity", "floor_contact"],
+        "frequency_cut_off": 0.5
     }
 
     counter = 0
     for seed in seeds:
         for sampler in samplers:
-            for env in envs_descriptors.keys():
+            # for env in envs_descriptors.keys():
+            for env in envs:
                 counter += 1
                 cfg = copy.deepcopy(base_cfg)
                 cfg["seed"] = seed
                 cfg["sampler"] = sampler
                 cfg["env_name"] = env
                 cfg[
-                    "run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-{env.replace('-v0', '').lower()}-{sampler}"
-                cfg.update(envs_descriptors[env])
+                    "run_name"] = (f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-"
+                                   f"{env.replace('-v0', '').lower()}-{sampler}")
+                # cfg.update(envs_descriptors[env])
                 print(
-                    f"{counter}/{len(seeds) * len(samplers) * len(envs_descriptors)} -> evo-body-"
+                    f"{counter}/{len(seeds) * len(samplers) * len(envs)} -> evo-body-"
                     f"{cfg['grid_size']}x{cfg['grid_size']}, {seed}, {sampler}")
                 run_body_evo_me(cfg)
