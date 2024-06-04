@@ -31,10 +31,10 @@ def structure_corners(observation: np.ndarray, robot_structure: np.ndarray, robo
                 masses_idx += 4
             else:
                 # check the 2d location and find out whether this voxel has a neighbor to its left or up
-                height, width = _two_d_idx_of(idx, robot_bounding_box)
-                left_idx = _one_d_idx_of(height, width - 1, robot_bounding_box)
-                up_idx = _one_d_idx_of(height - 1, width, robot_bounding_box)
-                upright_idx = _one_d_idx_of(height - 1, width + 1, robot_bounding_box)
+                height, width = two_d_idx_of(idx, robot_bounding_box)
+                left_idx = one_d_idx_of(height, width - 1, robot_bounding_box)
+                up_idx = one_d_idx_of(height - 1, width, robot_bounding_box)
+                upright_idx = one_d_idx_of(height - 1, width + 1, robot_bounding_box)
                 # ?x
                 # xo
                 if (width - 1 >= 0 and height - 1 >= 0  # it can have neighbors W and N
