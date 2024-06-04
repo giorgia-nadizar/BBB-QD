@@ -128,18 +128,25 @@ class FloorContactWrapper(gym.Wrapper):
 
                 current_mass = current_profile[len(current_profile) - 1]
 
-            current_profile_ids = [np.where(ground_masses == m) for m in current_profile]
+            current_profile_ids = [np.where((ground_masses[0] == m[0]) & (ground_masses[1] == m[1]))[0][0].astype(int)
+                                   for m in current_profile]
             self.ground_masses_ids.append(current_profile_ids)
 
         return reset_result
 
     def step(self, action: ActType) -> Tuple[ObsType, float, bool, dict]:
         obs, reward, done, info = super().step(action)
-        ground_contact = detect_ground_contact(self.env.object_pos_at_time(self.env.get_time(), "robot"),
-                                               self.env.object_pos_at_time(self.env.get_time(), "ground"),
-                                               side=self.side_length,
-                                               offset=self.offset)
-        print(ground_contact)
+        robot = self.env.object_pos_at_time(self.env.get_time(), "robot")
+        ground = self.env.object_pos_at_time(self.env.get_time(), "ground")
+        ground_contact = False
+        for ground_ids in self.ground_masses_ids:
+            current_ground_masses = ground[:, ground_ids]
+            ground_contact = detect_ground_contact(robot,
+                                                   current_ground_masses,
+                                                   side=self.side_length,
+                                                   offset=self.offset)
+            if ground_contact:
+                break
         info["floor_contact"] = np.asarray([ground_contact])
         return obs, reward, done, info
 
