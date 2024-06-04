@@ -1,6 +1,9 @@
+import numpy as np
 from evogym.envs import *
 from gym.core import ActType
 from typing import Any
+from bbbqd.body.body_utils import structure_corners, polygon_area, voxel_velocity, two_d_idx_of, moore_neighbors, \
+    one_hot_structure
 
 
 class ObservationWrapper(gym.Wrapper):
@@ -10,7 +13,7 @@ class ObservationWrapper(gym.Wrapper):
         super().__init__(env)
         self.robot_structure = env.world.objects['robot'].get_structure()
         self.robot_bounding_box = self.env.world.objects['robot'].get_structure().shape
-        self.robot_structure_one_hot = self.get_one_hot_structure()
+        self.robot_structure_one_hot = one_hot_structure(self.robot_structure, self.robot_bounding_box)
         self.observe_structure = obs_details.get('observe_structure', False)
         self.observe_voxel_volume = obs_details.get('observe_voxel_volume', False)
         self.observe_voxel_vel = obs_details.get('observe_voxel_vel', False)
@@ -28,192 +31,41 @@ class ObservationWrapper(gym.Wrapper):
     def observe(self) -> np.ndarray:
         raise NotImplementedError
 
-    def get_volumes_from_pos(self) -> Tuple[np.ndarray, np.ndarray]:
+    def volumes_from_pos(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         returns a 2d np array with volumes of each voxel (or -9999 if the voxel is not in the body)
         and a mask of the voxels that are in the body
         """
         pos = self.env.object_pos_at_time(self.env.get_time(), 'robot')
-        structure_corners = self.get_structure_corners(pos)
+        corners = structure_corners(pos, self.robot_structure, self.robot_bounding_box)
         volumes = np.ones_like(self.robot_structure, dtype=float) * -9999
         mask = np.zeros_like(self.robot_structure)
-        for idx, corners in enumerate(structure_corners):
+        for idx, corners in enumerate(corners):
             if corners is None:
                 continue
-            x, y = self.two_d_idx_of(idx)
-            volumes[x, y] = self.polygon_area([x[0] for x in corners], [x[1] for x in corners])
+            x, y = two_d_idx_of(idx, self.robot_bounding_box)
+            volumes[x, y] = polygon_area([x[0] for x in corners], [x[1] for x in corners])
             mask[x, y] = 1
         return volumes, mask
 
-    def get_velocities_from_pos(self) -> Tuple[np.ndarray, np.ndarray]:
+    def velocities_from_pos(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         returns a 2d numpy array with velocity of each voxel (or -9999 if the voxel is not in the body)
         and a mask of the voxels that are in the body
         """
         vel = self.env.object_vel_at_time(self.env.get_time(), 'robot')
-        structure_corners = self.get_structure_corners(vel)
+        corners = structure_corners(vel, self.robot_structure, self.robot_bounding_box)
         velocities = np.ones((self.robot_bounding_box[0], self.robot_bounding_box[1], 2)) * -9999
         mask = np.zeros_like(self.robot_structure)
-        for idx, corners in enumerate(structure_corners):
+        for idx, corners in enumerate(corners):
             if corners is None:
                 continue
-            x, y = self.two_d_idx_of(idx)
-            vx, vy = self.voxel_velocity([x[0] for x in corners], [x[1] for x in corners])
+            x, y = two_d_idx_of(idx, self.robot_bounding_box)
+            vx, vy = voxel_velocity([x[0] for x in corners], [x[1] for x in corners])
             velocities[x, y, 0] = vx
             velocities[x, y, 1] = vy
             mask[x, y] = 1
         return velocities, mask
-
-    def get_structure_corners(self, observation: np.ndarray) -> List[List[List[float]]]:
-        """ process the observation to each voxel's corner that exists in reading order (left to right, top to bottom)
-        evogym returns basic observation for each point mass (corner of voxel) in reading order.
-        but for the voxels that are neighbors -- share a corner, only one observation is returned.
-        this function takes any observation in that form and returns a 2d list.
-        each element of the list is a list of corners of the voxel and show the observation for 4 corners of the voxel.
-        """
-        f_structure = self.robot_structure.flatten()
-        masses_idx = 0
-        structure_corners = [None] * self.robot_bounding_box[0] * self.robot_bounding_box[1]
-        for idx, val in enumerate(f_structure):
-            if val == 0:
-                continue
-            else:
-                if masses_idx == 0:
-                    # the first voxel has order NW-NE-SW-SE
-                    structure_corners[idx] = [[observation[0, 0], observation[1, 0]],
-                                              [observation[0, 1], observation[1, 1]],
-                                              [observation[0, 2], observation[1, 2]],
-                                              [observation[0, 3], observation[1, 3]]]
-                    masses_idx += 4
-                else:
-                    # check the 2d location and find out whether this voxel has a neighbor to its left or up
-                    height, width = self.two_d_idx_of(idx)
-                    left_idx = self.one_d_idx_of(height, width - 1)
-                    up_idx = self.one_d_idx_of(height - 1, width)
-                    upright_idx = self.one_d_idx_of(height - 1, width + 1)
-                    # ?x
-                    # xo
-                    if (width - 1 >= 0 and height - 1 >= 0  # it can have neighbors W and N
-                            and structure_corners[left_idx] is not None  # neighbor W
-                            and structure_corners[up_idx] is not None):  # neighbor N
-                        # N and W neighbors are occupied: the new mass is only SE
-                        structure_corners[idx] = [structure_corners[up_idx][2],
-                                                  structure_corners[up_idx][3],
-                                                  structure_corners[left_idx][3],
-                                                  [observation[0, masses_idx], observation[1, masses_idx]]
-                                                  ]
-                        masses_idx += 1
-                    # ??x
-                    # xox
-                    elif (width - 1 >= 0  # it can have neighbor W
-                          and structure_corners[left_idx] is not None  # neighbor W
-                          and width + 1 < self.robot_bounding_box[1]  # it can have neighbor E
-                          and height - 1 >= 0  # it can have neighbor N
-                          and structure_corners[upright_idx] is not None  # neighbor NE
-                          and self.robot_structure[height, width + 1] != 0):  # non-empty neighbor E
-                        # W and NE neighbors are occupied: the new mass is only SE
-                        structure_corners[idx] = [structure_corners[left_idx][1],
-                                                  structure_corners[upright_idx][2],
-                                                  structure_corners[left_idx][3],
-                                                  [observation[0, masses_idx],
-                                                   observation[1, masses_idx]]]
-                        masses_idx += 1
-                    # __
-                    # xo
-                    elif width - 1 >= 0 and structure_corners[left_idx] is not None:
-                        # only W neighbor is occupied: NE and SE masses are new
-                        structure_corners[idx] = [structure_corners[left_idx][1],
-                                                  [observation[0, masses_idx], observation[1, masses_idx]],
-                                                  structure_corners[left_idx][3],
-                                                  [observation[0, masses_idx + 1], observation[1, masses_idx + 1]]
-                                                  ]
-                        masses_idx += 2
-                    # ?x
-                    # _o
-                    elif height - 1 >= 0 and structure_corners[up_idx] is not None:
-                        # only N neighbor is occupied: SW and SE masses are new
-                        structure_corners[idx] = [structure_corners[up_idx][2],
-                                                  structure_corners[up_idx][3],
-                                                  [observation[0, masses_idx], observation[1, masses_idx]],
-                                                  [observation[0, masses_idx + 1], observation[1, masses_idx + 1]]
-                                                  ]
-                        masses_idx += 2
-                    # _x
-                    # ox
-                    elif (width + 1 < self.robot_bounding_box[1]  # it can have neighbor E
-                          and height - 1 >= 0  # it can have neighbor N
-                          and structure_corners[upright_idx] is not None  # it has neighbor NE
-                          and self.robot_structure[height, width + 1] != 0):  # it has neighbor E
-                        # NE and E neighbors are occupied: NW, SW, and SE masses are new
-                        structure_corners[idx] = [
-                            [observation[0, masses_idx], observation[1, masses_idx]],
-                            structure_corners[upright_idx][2],
-                            [observation[0, masses_idx + 1], observation[1, masses_idx + 1]],
-                            [observation[0, masses_idx + 2], observation[1, masses_idx + 2]]]
-                        masses_idx += 3
-                    else:
-                        # no neighbors are occupied, all four point masses are new
-                        structure_corners[idx] = [
-                            [observation[0, masses_idx], observation[1, masses_idx]],
-                            [observation[0, masses_idx + 1], observation[1, masses_idx + 1]],
-                            [observation[0, masses_idx + 2], observation[1, masses_idx + 2]],
-                            [observation[0, masses_idx + 3], observation[1, masses_idx + 3]]]
-                        masses_idx += 4
-
-        return structure_corners
-
-    @staticmethod
-    def polygon_area(x: List[float], y: List[float]) -> float:
-        """ Calculates the area of an arbitrary polygon given its vertices in x and y (list) coordinates.
-        assumes the order is wrong """
-        x[0], x[1] = x[1], x[0]
-        y[0], y[1] = y[1], y[0]
-        correction = x[-1] * y[0] - y[-1] * x[0]
-        main_area = np.dot(x[:-1], y[1:]) - np.dot(y[:-1], x[1:])
-        area = 0.5 * np.abs(main_area + correction)
-        return area
-
-    @staticmethod
-    def voxel_velocity(x: List[float], y: List[float]) -> Tuple[float, float]:
-        """ Calculates the velocity of a voxel given its 4 corners' velocities """
-        return (x[0] + x[1] + x[2] + x[3]) / 4.0, (y[0] + y[1] + y[2] + y[3]) / 4.0
-
-    def two_d_idx_of(self, idx: int) -> Tuple[int, int]:
-        """
-        returns 2d index of a 1d index
-        """
-        return idx // self.robot_bounding_box[1], idx % self.robot_bounding_box[1]
-
-    def one_d_idx_of(self, x: int, y: int) -> int:
-        """
-        returns 1d index of a 2d index
-        """
-        return x * self.robot_bounding_box[1] + y
-
-    def get_moore_neighbors(self, x: int, y: int, observation_range: int) -> List[Tuple[float, List[int]]]:
-        """
-        returns the 8 neighbors of a voxel in the structure
-        """
-        neighbors = []
-        min_obs_range = observation_range * -1
-        max_obs_range = observation_range + 1
-        for i in range(min_obs_range, max_obs_range):
-            for j in range(min_obs_range, max_obs_range):
-                if 0 <= x + i < self.robot_bounding_box[0] and 0 <= y + j < self.robot_bounding_box[1]:
-                    neighbors.append((1.0, [x + i, y + j]))
-                else:
-                    neighbors.append((-1.0, None))
-        return neighbors
-
-    def get_one_hot_structure(self) -> np.ndarray:
-        """
-        returns a one-hot encoding of the structure
-        """
-        one_hot = np.zeros((self.robot_bounding_box[0], self.robot_bounding_box[1], 5))
-        for i in range(self.robot_bounding_box[0]):
-            for j in range(self.robot_bounding_box[1]):
-                one_hot[i, j, int(self.robot_structure[i, j])] = 1
-        return one_hot
 
 
 class LocalObservationWrapper(ObservationWrapper):
@@ -244,18 +96,18 @@ class LocalObservationWrapper(ObservationWrapper):
     def observe(self) -> np.ndarray:
         # get the raw observations
         if self.observe_voxel_volume:
-            volumes, volumes_mask = self.get_volumes_from_pos()
+            volumes, volumes_mask = self.volumes_from_pos()
         if self.observe_voxel_vel:
-            velocities, velocities_mask = self.get_velocities_from_pos()
+            velocities, velocities_mask = self.velocities_from_pos()
         # walk through the structure and create the observation per each voxel
         observations = []
         for idx in range(self.robot_structure.size):
-            x, y = self.two_d_idx_of(idx)
+            x, y = two_d_idx_of(idx, self.robot_bounding_box)
             if self.robot_structure[x, y] in [0, 1, 2]:
                 continue
             obs = []
             # get the neighbors
-            neighbors = self.get_moore_neighbors(x, y, self.observation_range)
+            neighbors = moore_neighbors(x, y, self.observation_range, self.robot_bounding_box)
             # get the volumes of the neighbors
             for neighbor in neighbors:
                 if neighbor[0] == -1:  # neighbor is only -1 when it is out of bounds
@@ -329,14 +181,14 @@ class GlobalObservationWrapper(ObservationWrapper):
     def observe(self) -> np.ndarray:
         # get the raw observations
         if self.observe_voxel_volume:
-            volumes, volumes_mask = self.get_volumes_from_pos()
+            volumes, volumes_mask = self.volumes_from_pos()
         if self.observe_voxel_vel:
-            velocities, velocities_mask = self.get_velocities_from_pos()
+            velocities, velocities_mask = self.velocities_from_pos()
         # walk through the bounding box and create the observation per each grid
         obs = []
         for idx in range(self.robot_structure.size):
             # find the position of the voxel
-            x, y = self.two_d_idx_of(idx)
+            x, y = two_d_idx_of(idx, self.robot_bounding_box)
             # observe structure
             if self.observe_structure:
                 if (self.fixed_body and self.robot_structure_one_hot[x, y, 0] == 0) or not self.fixed_body:
