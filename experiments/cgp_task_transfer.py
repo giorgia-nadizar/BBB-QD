@@ -1,3 +1,4 @@
+import os
 from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
@@ -17,6 +18,7 @@ from bbbqd.core.evaluation import evaluate_controller_and_body
 from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire
 from qdax.core.gp.encoding import compute_encoding_function
 from qdax.types import RNGKey, Fitness, Descriptor, ExtraScores
+from qdax.utils.metrics import default_triqd_metrics, CSVLogger
 
 
 # This is a placeholder class, all local functions will be added as its attributes
@@ -48,6 +50,9 @@ def run_task_transfer(
     brain_descr_fn, _ = get_graph_descriptor_extractor(config)
     body_descr_fn, _ = get_body_descriptor_extractor(config)
     behavior_descr_fns = get_behavior_descriptors_functions(config)
+
+    # metrics
+    tri_qd_metrics = partial(default_triqd_metrics, qd_offset=0)
 
     # load repertoire
     initial_repertoire = MapElitesTriRepertoire.load(reconstruction_fn=lambda x: x, path=repertoire_path)
@@ -119,10 +124,45 @@ def run_task_transfer(
                 centroids3=centroids3,
                 extra_scores=extra_scores
             )
-
             tri_repertoire.save(target_path)
+            headers = ["max_fitness", "coverage1", "coverage2", "coverage3"]
+            csv_logger = CSVLogger(
+                f"../results/me/{name}.csv",
+                header=headers
+            )
+            metrics = tri_qd_metrics(tri_repertoire)
+            logged_metrics = {k: metrics[k] for k in headers}
+            csv_logger.log(logged_metrics)
 
         for rep_idx, genotypes in [genotypes1, genotypes2, genotypes3]:
-            # TODO build storage path properly
-            # TODO add some other metrics to store
-            init_and_store(genotypes, rep_idx)
+            name = f"{config['run_name']}_{config['seed']}_g{rep_idx + 1}_{env_name}"
+            os.makedirs(f"../results/transfer/{name}/", exist_ok=True)
+            init_and_store(genotypes, f"../results/transfer/{name}/")
+            with open(f"../results/transfer/{name}/config.yaml", "w") as file:
+                yaml.dump(config, file)
+
+
+if __name__ == '__main__':
+    environments = [
+        ("BridgeWalker-v0", 200),
+        ("CustomPusher-v0", 200),
+        ("UpStepper-v0", 200),
+        ("DownStepper-v0", 200),
+        ("ObstacleTraverser-v0", 200),
+
+        ("ObstacleTraverser-v1", 200),
+        ("Hurdler-v0", 200),
+        ("PlatformJumper-v0", 200),
+        ("GapJumper-v0", 200),
+        ("CaveCrawler-v0", 200),
+        ("CustomCarrier-v0", 200),
+    ]
+
+    start_name = "evo-body-10x10-floor-"
+    samplers = ["all", "s1", "s2", "s3"]
+    seeds = range(10)
+
+    for sampler in samplers:
+        for seed in seeds:
+            repertoire_path = f"../results/me/{start_name}{sampler}_{seed}"
+            run_task_transfer(repertoire_path, environments)
