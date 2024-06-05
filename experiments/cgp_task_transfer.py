@@ -138,7 +138,7 @@ def run_task_transfer(
             tri_repertoire.save(target_path)
             headers = ["max_fitness", "coverage1", "coverage2", "coverage3"]
             csv_logger = CSVLogger(
-                f"../results/me/{name}.csv",
+                f"../results/transfer/{name}.csv",
                 header=headers
             )
             metrics = tri_qd_metrics(tri_repertoire)
