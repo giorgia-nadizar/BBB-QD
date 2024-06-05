@@ -135,7 +135,7 @@ def run_task_transfer(
             logged_metrics = {k: metrics[k] for k in headers}
             csv_logger.log(logged_metrics)
 
-        for rep_idx, genotypes in [genotypes1, genotypes2, genotypes3]:
+        for rep_idx, genotypes in enumerate([genotypes1, genotypes2, genotypes3]):
             name = f"{config['run_name']}_{config['seed']}_g{rep_idx + 1}_{env_name}"
             os.makedirs(f"../results/transfer/{name}/", exist_ok=True)
             init_and_store(genotypes, f"../results/transfer/{name}/")
