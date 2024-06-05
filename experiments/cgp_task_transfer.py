@@ -166,5 +166,5 @@ if __name__ == '__main__':
     for sampler in samplers:
         for seed in seeds:
             print(f"{sampler}, {seed}")
-            repertoire_path = f"../results/me/{start_name}{sampler}_{seed}"
+            repertoire_path = f"../results/me/{start_name}{sampler}_{seed}/"
             run_task_transfer(repertoire_path, environments)
