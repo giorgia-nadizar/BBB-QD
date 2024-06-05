@@ -71,6 +71,16 @@ def run_task_transfer(
     genotypes2 = initial_repertoire.repertoire2.genotypes
     genotypes3 = initial_repertoire.repertoire3.genotypes
 
+    # extract fitnesses to filter out empty cells
+    fitnesses1 = initial_repertoire.repertoire1.fitnesses
+    fitnesses2 = initial_repertoire.repertoire2.fitnesses
+    fitnesses3 = initial_repertoire.repertoire3.fitnesses
+
+    # filter genotypes
+    genotypes1 = genotypes1[fitnesses1 > - jnp.inf]
+    genotypes2 = genotypes2[fitnesses2 > - jnp.inf]
+    genotypes3 = genotypes3[fitnesses3 > - jnp.inf]
+
     for env_name, episode_length in environments:
         print(f"\t{env_name}")
         config["env_name"] = env_name
