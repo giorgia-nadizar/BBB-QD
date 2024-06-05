@@ -72,6 +72,7 @@ def run_task_transfer(
     genotypes3 = initial_repertoire.repertoire3.genotypes
 
     for env_name, episode_length in environments:
+        print(f"\t{env_name}")
         config["env_name"] = env_name
         config["episode_length"] = episode_length
 
@@ -164,5 +165,6 @@ if __name__ == '__main__':
 
     for sampler in samplers:
         for seed in seeds:
+            print(f"{sampler}, {seed}")
             repertoire_path = f"../results/me/{start_name}{sampler}_{seed}"
             run_task_transfer(repertoire_path, environments)
