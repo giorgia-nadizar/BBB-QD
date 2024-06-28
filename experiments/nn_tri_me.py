@@ -1,4 +1,5 @@
 import copy
+import functools
 import os
 import time
 from datetime import datetime
@@ -7,10 +8,12 @@ from multiprocessing import Pool
 
 import jax
 import jax.numpy as jnp
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Callable, List
 
 import numpy as np
 import yaml
+from flax.core import FrozenDict, frozen_dict
+from jax import vmap
 
 from bbbqd.behavior.behavior_descriptors import get_behavior_descriptors_functions
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
@@ -19,13 +22,16 @@ from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask,
 from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
+from bbbqd.core.misc import isoline_and_body_mutation
 from bbbqd.core.validation import count_invalid_bodies, validate_body_width
 from bbbqd.wrappers import make_env
+from qdax.core.emitters.mutation_operators import isoline_variation
 from qdax.core.emitters.standard_emitters import MixingEmitter
 from qdax.core.gp.encoding import compute_encoding_function
 from qdax.core.gp.individual import compute_genome_mask, compute_mutation_mask, generate_population, \
     compute_mutation_fn, compute_variation_mutation_fn
 from qdax.core.gp.utils import update_config
+from qdax.core.neuroevolution.networks.networks import MLP
 from qdax.core.tri_map_elites import TriMAPElites, sampling_function
 from qdax.types import RNGKey, Fitness, ExtraScores, Descriptor
 from qdax.utils.metrics import CSVLogger, default_triqd_metrics
@@ -45,93 +51,94 @@ def run_body_evo_me(config: Dict[str, Any]):
     env = make_env(config)
 
     # Update config with env info
-    config = update_config(config, env)
+    # config = update_config(config, env)
 
     # Init a random key
     random_key = jax.random.PRNGKey(config["seed"])
 
-    # Init population of controllers
+    # Init body genome part
     body_mask = compute_body_mask(config)
-    controller_mask = compute_genome_mask(config, config["n_in"], config["n_out"])
-    genome_mask = jnp.concatenate([body_mask, controller_mask])
+
+    # Init policy network
+    policy_layer_sizes = config["policy_hidden_layer_sizes"] + (env.action_size,)
+    policy_network = MLP(
+        layer_sizes=policy_layer_sizes,
+        kernel_init=jax.nn.initializers.lecun_uniform(),
+        final_activation=jnp.tanh,
+    )
 
     # Compute mutation masks
     body_mutation_mask = compute_body_mutation_mask(config)
     body_float_length = compute_body_float_genome_length(config)
-    controller_mutation_mask = compute_mutation_mask(config, config["n_out"])
-    mutation_mask = jnp.concatenate([body_mutation_mask, controller_mutation_mask])
+    body_genome_length = len(body_mask) + body_float_length
 
-    # Define encoding function
-    program_encoding_fn = compute_encoding_function(config)
+    # TODO check typing
+    # Define function to return the proper nn policy and controller
+    def _nn_policy_creation_fn(policy_params: FrozenDict) -> Callable[[jnp.ndarray], jnp.ndarray]:
+        def _nn_policy_fn(actions: jnp.ndarray) -> jnp.ndarray:
+            return policy_network.apply(policy_params, actions)
 
-    # Define function to return the proper controller
+        return _nn_policy_fn
+
     controller_creation_fn = compute_controller_generation_fn(config)
 
     # Body encoding function
     body_encoding_fn = compute_body_encoding_function(config)
 
     # Descriptors
-    brain_descr_fn, _ = get_graph_descriptor_extractor(config)
+    # TODO add nn descriptors
+    # brain_descr_fn, _ = get_graph_descriptor_extractor(config)
     body_descr_fn, _ = get_body_descriptor_extractor(config)
     behavior_descr_fns = get_behavior_descriptors_functions(config)
 
+    # Generate population
     random_key, pop_key = jax.random.split(random_key)
-    if config.get("fixed_outputs", False):
-        fixed_outputs = jnp.arange(start=config["buffer_size"] - config["n_out"], stop=config["buffer_size"], step=1)
-        population_generation_fn = partial(generate_population,
-                                           genome_mask=genome_mask,
-                                           rnd_key=pop_key,
-                                           fixed_genome_trailing=fixed_outputs,
-                                           float_header_length=body_float_length)
-        config["p_mut_outputs"] = 0
-    else:
-        population_generation_fn = partial(generate_population,
-                                           genome_mask=genome_mask,
-                                           rnd_key=pop_key,
-                                           float_header_length=body_float_length)
+    population_generation_fn = partial(generate_population,
+                                       genome_mask=body_mask,
+                                       rnd_key=pop_key,
+                                       float_header_length=body_float_length)
 
-    population = population_generation_fn(config["parents_size"])
+    init_bodies = population_generation_fn(config["parents_size"])
+    random_key, nns_key = jax.random.split(random_key)
+    keys = jax.random.split(nns_key, num=config["parents_size"])
+    fake_batch = jnp.zeros(shape=(config["parents_size"], env.observation_size))
+    init_nns = jax.vmap(policy_network.init)(keys, fake_batch)
+    population = init_nns.copy({"body": init_bodies})
 
-    # Create invalid checker function
-    if "Climber" in config["env_name"]:
-        invalidity_counter_fn = partial(count_invalid_bodies, body_genome_size=len(body_mask) + body_float_length,
-                                        body_encoding_fn=body_encoding_fn, max_body_width=5)
-        validity_checker = partial(validate_body_width, body_genome_size=len(body_mask) + body_float_length,
-                                   body_encoding_fn=body_encoding_fn, max_body_width=5)
-        # ensure initial population is all valid
-        additional_population_samples = population_generation_fn(10 * config["parents_size"])
-        valid_population = []
-        for g in population:
-            if validity_checker(g):
-                valid_population.append(g)
-        for g in additional_population_samples:
-            if len(valid_population) == config["parents_size"]:
-                break
-            if validity_checker(g):
-                valid_population.append(g)
-        population = jnp.asarray(valid_population)
-    else:
-        invalidity_counter_fn = lambda _: 0
+    # util functions for iterating the frozen dicts and rearranging them into a list
+    def _get_items_at_index(dictionary, index, new_dict={}):
+        current_keys = dictionary.keys()
+        for k in current_keys:
+            if isinstance(dictionary[k], FrozenDict):
+                new_dict[k] = {}
+                _get_items_at_index(dictionary[k], index, new_dict[k])
+            else:
+                new_dict[k] = dictionary[k][index]
+        return new_dict
+
+    def _rearrange_genomes(genomes: FrozenDict) -> List[FrozenDict]:
+        return [frozen_dict.freeze(_get_items_at_index(genomes, g)) for g in range(len(genomes["body"]))]
 
     # Create evaluation function
     evaluation_fn = partial(evaluate_controller_and_body, config=config, descriptors_functions=behavior_descr_fns)
 
     # Define genome evaluation fn -> returns fitness and brain, body, behavior descriptors
-    def _evaluate_genome(genome: jnp.ndarray) -> Tuple[float, np.ndarray]:
-        body_genome, controller_genome = jnp.split(genome, [len(body_mask) + body_float_length])
-        controller = controller_creation_fn(program_encoding_fn(controller_genome))
+    def _evaluate_genome(genome: FrozenDict) -> Tuple[float, np.ndarray]:
+        nn_genome, body_genome = genome.pop("body")
+        controller = controller_creation_fn(_nn_policy_creation_fn(nn_genome))
         body = body_encoding_fn(body_genome)
-        brain_descriptors = brain_descr_fn(controller_genome)
+        # TODO get real brain descriptors
+        brain_descriptors = np.asarray([0, 0])
         body_descriptors = body_descr_fn(body)
         fitness, behavior_descriptors = evaluation_fn(controller, body)
         return fitness, np.concatenate([brain_descriptors, body_descriptors, behavior_descriptors])
 
     # Add all functions to _LocalFunctions class, separating each with a comma
-    _LocalFunctions.add_functions(_evaluate_genome)
+    _LocalFunctions.add_functions(_evaluate_genome, _nn_policy_creation_fn)
 
     # Define scoring fn
-    def _qd_scoring_fn(genomes: jnp.ndarray, rnd_key: RNGKey) -> Tuple[Fitness, Descriptor, ExtraScores, RNGKey]:
-        genomes_list = [g for g in genomes]
+    def _qd_scoring_fn(genomes: FrozenDict, rnd_key: RNGKey) -> Tuple[Fitness, Descriptor, ExtraScores, RNGKey]:
+        genomes_list = _rearrange_genomes(genomes)
         pool_size = config.get("pool_size", config["pop_size"])
         fitnesses = []
         descriptors = []
@@ -148,18 +155,15 @@ def run_body_evo_me(config: Dict[str, Any]):
         return jnp.asarray(fitnesses), jnp.asarray(descriptors), None, rnd_key
 
     # Define emitter
-    mutation_fn = compute_mutation_fn(genome_mask, mutation_mask, config.get("float_mutation_sigma", 0.1))
-    variation_fn = None
-    variation_perc = 0.0
-    if config["solver"] == "lgp":
-        variation_fn = compute_variation_mutation_fn(genome_mask, mutation_mask,
-                                                     config.get("float_mutation_sigma", 0.1))
-        variation_perc = 1.0
-
+    isoline_mutation_fn = functools.partial(
+        isoline_variation, iso_sigma=config["iso_sigma"], line_sigma=config["line_sigma"]
+    )
+    body_mutation_fn = compute_mutation_fn(body_mask, body_mutation_mask, config.get("float_mutation_sigma", 0.1))
+    variation_fn = isoline_and_body_mutation(isoline_mutation_fn, body_mutation_fn)
     mixing_emitter = MixingEmitter(
-        mutation_fn=mutation_fn,
+        mutation_fn=None,
         variation_fn=variation_fn,
-        variation_percentage=variation_perc,
+        variation_percentage=1.0,
         batch_size=config["parents_size"]
     )
 
@@ -175,7 +179,6 @@ def run_body_evo_me(config: Dict[str, Any]):
         descriptors_indexes2=jnp.asarray([2, 3]),
         descriptors_indexes3=jnp.asarray([4, 5]),
         sampling_id_function=sampling_id_fn,
-        invalidity_counter=invalidity_counter_fn
     )
 
     brain_centroids = jnp.load("data/brain_centroids.npy")
@@ -197,7 +200,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     name = f"{config.get('run_name', 'trial')}_{config['seed']}"
 
     csv_logger = CSVLogger(
-        f"../results/me/{name}.csv",
+        f"../results/me_nn/{name}.csv",
         header=headers
     )
 
@@ -222,9 +225,9 @@ def run_body_evo_me(config: Dict[str, Any]):
         fitness_evaluations = fitness_evaluations + config["parents_size"] - logged_metrics["invalid_individuals"]
         print(f"{i}\t{logged_metrics['max_fitness']}")
 
-    os.makedirs(f"../results/me/{name}/", exist_ok=True)
-    repertoire.save(f"../results/me/{name}/")
-    with open(f"../results/me/{name}/config.yaml", "w") as file:
+    os.makedirs(f"../results/me_nn/{name}/", exist_ok=True)
+    repertoire.save(f"../results/me_nn/{name}/")
+    with open(f"../results/me_nn/{name}/config.yaml", "w") as file:
         yaml.dump(config, file)
 
     i = config["n_iterations"]
@@ -249,24 +252,25 @@ def run_body_evo_me(config: Dict[str, Any]):
         print(f"{i}\t{logged_metrics['max_fitness']}")
         i += 1
 
-    repertoire.save(f"../results/me/{name}/extra_")
+    repertoire.save(f"../results/me_nn/{name}/extra_")
 
 
 if __name__ == '__main__':
     # samplers = ["all", "s1", "s2", "s3"]
-    seeds = range(10)
+    seeds = range(1)
     samplers = ["all"]
-    envs = ["BridgeWalker-v0",
-            "Pusher-v0",
-            "UpStepper-v0",
-            "DownStepper-v0",
-            "ObstacleTraverser-v0",
+    envs = ["Walker-v0"
+            # "BridgeWalker-v0",
+            # "Pusher-v0",
+            # "UpStepper-v0",
+            # "DownStepper-v0",
+            # "ObstacleTraverser-v0",
 
-            "ObstacleTraverser-v1",
-            "Hurdler-v0",
-            "PlatformJumper-v0",
-            "GapJumper-v0",
-            "CaveCrawler-v0",
+            # "ObstacleTraverser-v1",
+            # "Hurdler-v0",
+            # "PlatformJumper-v0",
+            # "GapJumper-v0",
+            # "CaveCrawler-v0",
             # "Carrier-v0"
             ]
     envs_descriptors = {
@@ -287,17 +291,12 @@ if __name__ == '__main__':
     }
 
     base_cfg = {
-        "n_nodes": 50,
-        "p_mut_inputs": 0.1,
-        "p_mut_functions": 0.1,
-        "p_mut_outputs": 0.3,
         "p_mut_body": 0.05,
-        "solver": "cgp",
+        "solver": "ne",
         "episode_length": 200,
-        "pop_size": 50,
-        "parents_size": 45,
+        "pop_size": 5,
+        "parents_size": 4,
         "n_iterations": 4000,
-        "fixed_outputs": True,
         "controller": "local",
         "flags": {
             "observe_voxel_vel": True,
@@ -312,11 +311,16 @@ if __name__ == '__main__':
         "n_body_elements": 20,
         "body_encoding": "indirect",
         "fixed_body": False,
-        "graph_descriptors": "function_arities",
+        # TODO add nn descriptors
         "body_descriptors": ["relative_activity", "elongation"],
         "behavior_descriptors": ["velocity_y", "floor_contact"],
         "qd_wrappers": ["velocity", "floor_contact"],
-        "frequency_cut_off": 0.5
+        "frequency_cut_off": 0.5,
+
+        # nn params
+        "policy_hidden_layer_sizes": (20, 20),
+        "iso_sigma": 0.005,
+        "line_sigma": 0.05,
     }
 
     counter = 0
