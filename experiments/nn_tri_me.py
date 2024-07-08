@@ -8,7 +8,7 @@ from multiprocessing import Pool
 
 import jax
 import jax.numpy as jnp
-from typing import Tuple, Dict, Any, Callable, List
+from typing import Tuple, Dict, Any, Callable, List, Union
 
 import numpy as np
 import yaml
@@ -19,7 +19,7 @@ from bbbqd.behavior.behavior_descriptors import get_behavior_descriptors_functio
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
 from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function, \
     compute_body_float_genome_length
-from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor
+from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor, get_nn_descriptor_extractor
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.core.misc import isoline_and_body_mutation
@@ -50,6 +50,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     # Create environment with wrappers
     env = make_env(config)
 
+    # TODO can this be removed?
     # Update config with env info
     # config = update_config(config, env)
 
@@ -72,7 +73,6 @@ def run_body_evo_me(config: Dict[str, Any]):
     body_float_length = compute_body_float_genome_length(config)
     body_genome_length = len(body_mask) + body_float_length
 
-    # TODO check typing
     # Define function to return the proper nn policy and controller
     def _nn_policy_creation_fn(policy_params: FrozenDict) -> Callable[[jnp.ndarray], jnp.ndarray]:
         def _nn_policy_fn(actions: jnp.ndarray) -> jnp.ndarray:
@@ -86,19 +86,18 @@ def run_body_evo_me(config: Dict[str, Any]):
     body_encoding_fn = compute_body_encoding_function(config)
 
     # Descriptors
-    # TODO add nn descriptors
-    # brain_descr_fn, _ = get_graph_descriptor_extractor(config)
+    brain_descr_fn, _ = get_nn_descriptor_extractor(config)
     body_descr_fn, _ = get_body_descriptor_extractor(config)
     behavior_descr_fns = get_behavior_descriptors_functions(config)
 
     # Generate population
     random_key, pop_key = jax.random.split(random_key)
-    population_generation_fn = partial(generate_population,
-                                       genome_mask=body_mask,
-                                       rnd_key=pop_key,
-                                       float_header_length=body_float_length)
+    body_generation_fn = partial(generate_population,
+                                 genome_mask=body_mask,
+                                 rnd_key=pop_key,
+                                 float_header_length=body_float_length)
 
-    init_bodies = population_generation_fn(config["parents_size"])
+    init_bodies = body_generation_fn(config["parents_size"])
     random_key, nns_key = jax.random.split(random_key)
     keys = jax.random.split(nns_key, num=config["parents_size"])
     fake_batch = jnp.zeros(shape=(config["parents_size"], env.observation_size))
@@ -106,7 +105,8 @@ def run_body_evo_me(config: Dict[str, Any]):
     population = init_nns.copy({"body": init_bodies})
 
     # util functions for iterating the frozen dicts and rearranging them into a list
-    def _get_items_at_index(dictionary, index, new_dict={}):
+    def _get_items_at_index(dictionary: Union[FrozenDict, Dict], index: int,
+                            new_dict: Dict = {}) -> Union[FrozenDict, Dict]:
         current_keys = dictionary.keys()
         for k in current_keys:
             if isinstance(dictionary[k], FrozenDict):
@@ -127,8 +127,7 @@ def run_body_evo_me(config: Dict[str, Any]):
         nn_genome, body_genome = genome.pop("body")
         controller = controller_creation_fn(_nn_policy_creation_fn(nn_genome))
         body = body_encoding_fn(body_genome)
-        # TODO get real brain descriptors
-        brain_descriptors = np.asarray([0, 0])
+        brain_descriptors = brain_descr_fn(nn_genome)
         body_descriptors = body_descr_fn(body)
         fitness, behavior_descriptors = evaluation_fn(controller, body)
         return fitness, np.concatenate([brain_descriptors, body_descriptors, behavior_descriptors])
@@ -311,11 +310,13 @@ if __name__ == '__main__':
         "n_body_elements": 20,
         "body_encoding": "indirect",
         "fixed_body": False,
-        # TODO add nn descriptors
+
         "body_descriptors": ["relative_activity", "elongation"],
         "behavior_descriptors": ["velocity_y", "floor_contact"],
         "qd_wrappers": ["velocity", "floor_contact"],
         "frequency_cut_off": 0.5,
+        "brain_descriptors": ["nn_connectivity"],
+        "weights_threshold": 0.25,
 
         # nn params
         "policy_hidden_layer_sizes": (20, 20),
