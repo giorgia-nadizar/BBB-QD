@@ -4,8 +4,17 @@ from typing import Dict, Tuple, Callable
 import jax.numpy as jnp
 from jax import vmap
 
+from bbbqd.brain.nn_descriptors import mean_and_std_output_connectivity
 from qdax.core.gp.graph_utils import compute_cgp_descriptors, compute_lgp_descriptors
 from qdax.types import Genotype, Descriptor
+
+
+def get_nn_descriptor_extractor(config: Dict) -> Tuple[Callable[[Genotype], Descriptor], int]:
+    assert config["solver"] == "ne"
+    assert "nn_connectivity" in config["brain_descriptors"]
+
+    weights_threshold = config.get("weights_threshold", 0.25)
+    return partial(mean_and_std_output_connectivity, threshold=weights_threshold), 2
 
 
 def get_graph_descriptor_extractor(config: Dict) -> Tuple[Callable[[Genotype], Descriptor], int]:
