@@ -49,6 +49,15 @@ def compute_centroids(
 if __name__ == '__main__':
     rnd_key = jax.random.PRNGKey(0)
 
+    nn_centroids, rnd_key = compute_centroids(
+        random_key=rnd_key,
+        n_descriptors=2,
+        min_value=0.,
+        max_value=1.
+    )
+    jnp.save("../experiments/data/nn_centroids.npy", nn_centroids)
+    print("nn centroids")
+
     body_centroids, rnd_key = compute_centroids(
         random_key=rnd_key,
         n_descriptors=2,
