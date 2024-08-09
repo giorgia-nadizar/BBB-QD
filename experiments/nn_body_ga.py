@@ -12,6 +12,7 @@ from typing import Tuple, Dict, Any, Callable, Union, List
 
 import yaml
 from flax.core import FrozenDict, frozen_dict
+from jax import jit
 
 from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function, \
     compute_body_float_genome_length
@@ -65,10 +66,11 @@ def run_body_evo_ga(config: Dict[str, Any]):
 
     # Define function to return the proper nn policy and controller
     def _nn_policy_creation_fn(policy_params: FrozenDict) -> Callable[[jnp.ndarray], jnp.ndarray]:
-        def _nn_policy_fn(actions: jnp.ndarray) -> jnp.ndarray:
-            return policy_network.apply(policy_params, actions)
+        def _nn_policy_fn(observations: jnp.ndarray) -> jnp.ndarray:
+            actions = policy_network.apply(policy_params, observations)
+            return actions
 
-        return _nn_policy_fn
+        return jit(_nn_policy_fn)
 
     controller_creation_fn = compute_controller_generation_fn(config)
 
@@ -112,9 +114,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
         nn_genome, body_genome = genome.pop("body")
         controller = controller_creation_fn(_nn_policy_creation_fn(nn_genome))
         body = body_encoding_fn(body_genome)
-        print(f"eval started: {datetime.now()}")
         fitness = evaluation_fn(controller, body)
-        print(f"eval done: {datetime.now()}")
         return fitness
 
     # Add all functions to _LocalFunctions class, separating each with a comma
