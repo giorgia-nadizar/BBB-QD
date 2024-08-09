@@ -112,7 +112,9 @@ def run_body_evo_ga(config: Dict[str, Any]):
         nn_genome, body_genome = genome.pop("body")
         controller = controller_creation_fn(_nn_policy_creation_fn(nn_genome))
         body = body_encoding_fn(body_genome)
+        print(f"eval started: {datetime.now()}")
         fitness = evaluation_fn(controller, body)
+        print(f"eval done: {datetime.now()}")
         return fitness
 
     # Add all functions to _LocalFunctions class, separating each with a comma
@@ -120,19 +122,16 @@ def run_body_evo_ga(config: Dict[str, Any]):
 
     # Define scoring fn
     def _scoring_fn(genomes: FrozenDict, rnd_key: RNGKey) -> Tuple[Fitness, ExtraScores, RNGKey]:
-        print(f"rearrange started: {datetime.now()}")
         genomes_list = _rearrange_genomes(genomes)
         pool_size = config.get("pool_size", config["pop_size"])
         fitnesses = []
         start_idx = 0
-        print(f"scoring started: {datetime.now()}")
         while start_idx < len(genomes_list):
             with Pool(pool_size) as p:
                 current_genomes = genomes_list[start_idx:min(start_idx + pool_size, len(genomes_list))]
                 current_fitnesses = p.map(_evaluate_genome, current_genomes)
                 fitnesses = fitnesses + current_fitnesses
                 start_idx += pool_size
-        print(f"scoring done: {datetime.now()}")
         return jnp.expand_dims(jnp.asarray(fitnesses), axis=1), None, rnd_key
 
     # Define emitter
