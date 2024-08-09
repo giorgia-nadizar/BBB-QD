@@ -10,12 +10,12 @@ from qdax.types import Genotype, RNGKey
 
 
 def _polynomial_mutation(
-    x: jnp.ndarray,
-    random_key: RNGKey,
-    proportion_to_mutate: float,
-    eta: float,
-    minval: float,
-    maxval: float,
+        x: jnp.ndarray,
+        random_key: RNGKey,
+        proportion_to_mutate: float,
+        eta: float,
+        minval: float,
+        maxval: float,
 ) -> jnp.ndarray:
     """Base polynomial mutation for one genotype.
 
@@ -79,12 +79,12 @@ def _polynomial_mutation(
 
 
 def polynomial_mutation(
-    x: Genotype,
-    random_key: RNGKey,
-    proportion_to_mutate: float,
-    eta: float,
-    minval: float,
-    maxval: float,
+        x: Genotype,
+        random_key: RNGKey,
+        proportion_to_mutate: float,
+        eta: float,
+        minval: float,
+        maxval: float,
 ) -> Tuple[Genotype, RNGKey]:
     """
     Polynomial mutation over several genotypes
@@ -119,10 +119,10 @@ def polynomial_mutation(
 
 
 def _polynomial_crossover(
-    x1: jnp.ndarray,
-    x2: jnp.ndarray,
-    random_key: RNGKey,
-    proportion_var_to_change: float,
+        x1: jnp.ndarray,
+        x2: jnp.ndarray,
+        random_key: RNGKey,
+        proportion_var_to_change: float,
 ) -> jnp.ndarray:
     """
     Base crossover for one pair of genotypes.
@@ -140,10 +140,10 @@ def _polynomial_crossover(
 
 
 def polynomial_crossover(
-    x1: Genotype,
-    x2: Genotype,
-    random_key: RNGKey,
-    proportion_var_to_change: float,
+        x1: Genotype,
+        x2: Genotype,
+        random_key: RNGKey,
+        proportion_var_to_change: float,
 ) -> Tuple[Genotype, RNGKey]:
     """
     Crossover over a set of pairs of genotypes.
@@ -180,13 +180,13 @@ def polynomial_crossover(
 
 
 def isoline_variation(
-    x1: Genotype,
-    x2: Genotype,
-    random_key: RNGKey,
-    iso_sigma: float,
-    line_sigma: float,
-    minval: Optional[float] = None,
-    maxval: Optional[float] = None,
+        x1: Genotype,
+        x2: Genotype,
+        random_key: RNGKey,
+        iso_sigma: float,
+        line_sigma: float,
+        minval: Optional[float] = None,
+        maxval: Optional[float] = None,
 ) -> Tuple[Genotype, RNGKey]:
     """
     Iso+Line-DD Variation Operator [1] over a set of pairs of genotypes
@@ -215,7 +215,7 @@ def isoline_variation(
     line_noise = jax.random.normal(key_line_noise, shape=(batch_size,)) * line_sigma
 
     def _variation_fn(
-        x1: jnp.ndarray, x2: jnp.ndarray, random_key: RNGKey
+            x1: jnp.ndarray, x2: jnp.ndarray, random_key: RNGKey
     ) -> jnp.ndarray:
         iso_noise = jax.random.normal(random_key, shape=x1.shape) * iso_sigma
         x = (x1 + iso_noise) + jax.vmap(jnp.multiply)((x2 - x1), line_noise)
@@ -236,4 +236,22 @@ def isoline_variation(
         lambda y1, y2, key: _variation_fn(y1, y2, key), x1, x2, keys_tree
     )
 
+    return x, random_key
+
+
+def gaussian_mutation(
+        x1: Genotype,
+        random_key: RNGKey,
+        sigma: float,
+) -> Tuple[Genotype, RNGKey]:
+    # create a tree with random keys
+    nb_leaves = len(jax.tree_util.tree_leaves(x1))
+    random_key, subkey = jax.random.split(random_key)
+    subkeys = jax.random.split(subkey, num=nb_leaves)
+    keys_tree = jax.tree_util.tree_unflatten(jax.tree_util.tree_structure(x1), subkeys)
+
+    # apply gaussian mutation to each element
+    x = jax.tree_map(
+        lambda y1, key: y1 + jax.random.normal(key, shape=y1.shape) * sigma, x1, keys_tree
+    )
     return x, random_key
