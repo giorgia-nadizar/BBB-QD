@@ -5,6 +5,8 @@ import jax.numpy as jnp
 from flax.core import FrozenDict, frozen_dict
 from typing import Callable, Union, Dict
 
+from jax import jit
+
 from bbbqd.body.bodies import encode_body_directly
 from bbbqd.body.body_utils import compute_body_mask, compute_body_encoding_function, compute_body_mutation_mask, \
     compute_body_float_genome_length
@@ -74,7 +76,7 @@ if __name__ == '__main__':
             actions = policy_network.apply(policy_params, observations)
             return actions
 
-        return _nn_policy_fn
+        return jit(_nn_policy_fn)
 
 
     controller_creation_fn = compute_controller_generation_fn(config)
