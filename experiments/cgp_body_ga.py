@@ -53,6 +53,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
     # Compute mutation masks
     body_mutation_mask = compute_body_mutation_mask(config)
     body_float_length = compute_body_float_genome_length(config)
+    body_genome_length = len(body_mask) + body_float_length
     controller_mutation_mask = compute_mutation_mask(config, config["n_out"])
     mutation_mask = jnp.concatenate([body_mutation_mask, controller_mutation_mask])
 
@@ -164,7 +165,6 @@ def run_body_evo_ga(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     seeds = range(10)
-    controllers = ["global", "local", "local2"]
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
@@ -176,35 +176,30 @@ if __name__ == '__main__':
         "episode_length": 200,
         "pop_size": 50,
         "parents_size": 45,
-        "n_iterations": 2000,
+        "n_iterations": 4000,
         "fixed_outputs": True,
-        "controller": "global",
+        "controller": "local",
         "flags": {
             "observe_voxel_vel": True,
             "observe_voxel_volume": True,
             "observe_time": False,
-            "observation_range": 2
         },
         "jax": True,
         "program_wrapper": True,
         "skip": 5,
-        "grid_size": 5,
+        "grid_size": 10,
+        "max_env_size": 5,
+        "n_body_elements": 20,
+        "body_encoding": "indirect",
         "fixed_body": False,
     }
 
     counter = 0
     for seed in seeds:
-        for controller_type in controllers:
-            counter += 1
-            cfg = copy.deepcopy(base_cfg)
-            cfg["seed"] = seed
-            cfg["controller"] = controller_type.replace("2", "")
-            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}_{controller_type}"
-            if "2" in controller_type:
-                cfg["flags"]["observation_range"] = 2
-            else:
-                cfg["flags"]["observation_range"] = 1
-            print(
-                f"{counter}/{len(seeds) * len(controllers)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, "
-                f"{controller_type}, {seed}")
-            run_body_evo_ga(cfg)
+        counter += 1
+        cfg = copy.deepcopy(base_cfg)
+        cfg["seed"] = seed
+        cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}"
+        print(
+            f"{counter}/{len(seeds)} -> evo-body-cgp-{cfg['grid_size']}x{cfg['grid_size']}, {seed}")
+        run_body_evo_ga(cfg)
