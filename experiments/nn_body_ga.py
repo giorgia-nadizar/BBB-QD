@@ -208,7 +208,7 @@ if __name__ == '__main__':
         "episode_length": 200,
         "pop_size": 50,
         "parents_size": 45,
-        "n_iterations": 2000,
+        "n_iterations": 4000,
         "controller": "local",
         "flags": {
             "observe_voxel_vel": True,
