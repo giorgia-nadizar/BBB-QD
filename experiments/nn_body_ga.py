@@ -112,7 +112,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
         nn_genome, body_genome = genome.pop("body")
         controller = controller_creation_fn(_nn_policy_creation_fn(nn_genome))
         body = body_encoding_fn(body_genome)
-        fitness, _ = evaluation_fn(controller, body)
+        fitness = evaluation_fn(controller, body)
         return fitness
 
     # Add all functions to _LocalFunctions class, separating each with a comma
