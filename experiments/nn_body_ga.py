@@ -20,7 +20,7 @@ from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.core.misc import isoline_and_body_mutation
 from bbbqd.wrappers import make_env
 from qdax.baselines.genetic_algorithm import GeneticAlgorithm
-from qdax.core.emitters.mutation_operators import isoline_variation
+from qdax.core.emitters.mutation_operators import isoline_variation, gaussian_mutation
 from qdax.core.emitters.standard_emitters import MixingEmitter
 from qdax.core.gp.individual import compute_genome_mask, generate_population, compute_mutation_fn
 from qdax.core.neuroevolution.networks.networks import MLP
@@ -137,15 +137,15 @@ def run_body_evo_ga(config: Dict[str, Any]):
         return jnp.expand_dims(jnp.asarray(fitnesses), axis=1), None, rnd_key
 
     # Define emitter
-    isoline_mutation_fn = functools.partial(
-        isoline_variation, iso_sigma=config["iso_sigma"], line_sigma=config["line_sigma"]
+    nn_mutation_fn = functools.partial(
+        gaussian_mutation, sigma=config["sigma"]
     )
     body_mutation_fn = compute_mutation_fn(body_mask, body_mutation_mask, config.get("float_mutation_sigma", 0.1))
-    variation_fn = isoline_and_body_mutation(isoline_mutation_fn, body_mutation_fn)
+    mutation_fn = isoline_and_body_mutation(nn_mutation_fn, body_mutation_fn)
     mixing_emitter = MixingEmitter(
-        mutation_fn=None,
-        variation_fn=variation_fn,
-        variation_percentage=1.0,
+        mutation_fn=mutation_fn,
+        variation_fn=None,
+        variation_percentage=0.0,
         batch_size=config["parents_size"]
     )
 
@@ -228,8 +228,7 @@ if __name__ == '__main__':
 
         # nn params
         "policy_hidden_layer_sizes": (20, 20),
-        "iso_sigma": 0.005,
-        "line_sigma": 0.05,
+        "sigma": 0.05,
     }
 
     counter = 0
