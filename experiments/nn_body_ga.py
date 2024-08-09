@@ -17,7 +17,7 @@ from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask,
     compute_body_float_genome_length
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
-from bbbqd.core.misc import isoline_and_body_mutation
+from bbbqd.core.misc import isoline_and_body_mutation, nn_and_body_mutation
 from bbbqd.wrappers import make_env
 from qdax.baselines.genetic_algorithm import GeneticAlgorithm
 from qdax.core.emitters.mutation_operators import isoline_variation, gaussian_mutation
@@ -138,7 +138,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
         gaussian_mutation, sigma=config["sigma"]
     )
     body_mutation_fn = compute_mutation_fn(body_mask, body_mutation_mask, config.get("float_mutation_sigma", 0.1))
-    mutation_fn = isoline_and_body_mutation(nn_mutation_fn, body_mutation_fn)
+    mutation_fn = nn_and_body_mutation(nn_mutation_fn, body_mutation_fn)
     mixing_emitter = MixingEmitter(
         mutation_fn=mutation_fn,
         variation_fn=None,

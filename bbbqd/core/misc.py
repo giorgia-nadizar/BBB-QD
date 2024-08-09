@@ -5,7 +5,7 @@ import jax
 from qdax.types import Genotype, RNGKey
 
 
-def gaussian_and_body_mutation(
+def nn_and_body_mutation(
         nn_mutation_fn: Callable[[Genotype, RNGKey], Tuple[Genotype, RNGKey]],
         body_mutation_fn: Callable[[Genotype, RNGKey], Tuple[Genotype, RNGKey]]
 ) -> Callable[[Genotype, RNGKey], Tuple[Genotype, RNGKey]]:
