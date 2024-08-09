@@ -238,5 +238,5 @@ if __name__ == '__main__':
             cfg["run_name"] = f"evo-body-nn-{cfg['grid_size']}x{cfg['grid_size']}-{env.replace('-v0', '').lower()}"
             print(
                 f"{counter}/{len(seeds) * len(envs)} -> evo-body-{cfg['grid_size']}x{cfg['grid_size']}, "
-                f", {seed}, {env.replace('-v0', '').lower()}")
+                f"{seed}, {env.replace('-v0', '').lower()}")
             run_body_evo_ga(cfg)
