@@ -58,9 +58,6 @@ def run_body_evo_ga(config: Dict[str, Any]):
         final_activation=jnp.tanh,
     )
 
-    controller_mask = compute_genome_mask(config, config["n_in"], config["n_out"])
-    genome_mask = jnp.concatenate([body_mask, controller_mask])
-
     # Compute mutation masks
     body_mutation_mask = compute_body_mutation_mask(config)
     body_float_length = compute_body_float_genome_length(config)
