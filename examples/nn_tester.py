@@ -72,7 +72,6 @@ if __name__ == '__main__':
     def _nn_policy_creation_fn(policy_params: FrozenDict) -> Callable[[jnp.ndarray], jnp.ndarray]:
         def _nn_policy_fn(observations: jnp.ndarray) -> jnp.ndarray:
             actions = policy_network.apply(policy_params, observations)
-            print(f"{observations} -> {actions}")
             return actions
 
         return _nn_policy_fn
