@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from functools import partial
 from typing import Callable, Optional, Tuple
 
-import jax
 import jax.numpy as jnp
 
 from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire
