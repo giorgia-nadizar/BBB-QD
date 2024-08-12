@@ -5,33 +5,28 @@ import time
 from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
+from typing import Tuple, Dict, Any, Callable, List, Union
 
 import jax
 import jax.numpy as jnp
-from typing import Tuple, Dict, Any, Callable, List, Union
-
 import numpy as np
 import yaml
 from flax.core import FrozenDict, frozen_dict
-from jax import vmap, jit
+from jax import jit
 
 from bbbqd.behavior.behavior_descriptors import get_behavior_descriptors_functions
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
 from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask, compute_body_encoding_function, \
     compute_body_float_genome_length
-from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor, get_nn_descriptor_extractor
+from bbbqd.brain.brain_descriptors import get_nn_descriptor_extractor
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.core.misc import isoline_and_body_mutation
-from bbbqd.core.pytree_utils import pytree_flatten, pytree_stack
-from bbbqd.core.validation import count_invalid_bodies, validate_body_width
 from bbbqd.wrappers import make_env
 from qdax.core.emitters.mutation_operators import isoline_variation
 from qdax.core.emitters.standard_emitters import MixingEmitter
-from qdax.core.gp.encoding import compute_encoding_function
-from qdax.core.gp.individual import compute_genome_mask, compute_mutation_mask, generate_population, \
-    compute_mutation_fn, compute_variation_mutation_fn
-from qdax.core.gp.utils import update_config
+from qdax.core.gp.individual import generate_population, \
+    compute_mutation_fn
 from qdax.core.neuroevolution.networks.networks import MLP
 from qdax.core.tri_map_elites import TriMAPElites, sampling_function
 from qdax.types import RNGKey, Fitness, ExtraScores, Descriptor
@@ -72,7 +67,6 @@ def run_body_evo_me(config: Dict[str, Any]):
     # Compute mutation masks
     body_mutation_mask = compute_body_mutation_mask(config)
     body_float_length = compute_body_float_genome_length(config)
-    body_genome_length = len(body_mask) + body_float_length
 
     # Define function to return the proper nn policy and controller
     def _nn_policy_creation_fn(policy_params: FrozenDict) -> Callable[[jnp.ndarray], jnp.ndarray]:
@@ -93,18 +87,19 @@ def run_body_evo_me(config: Dict[str, Any]):
     behavior_descr_fns = get_behavior_descriptors_functions(config)
 
     # Generate population
-    random_key, pop_key = jax.random.split(random_key)
+    random_key, bodies_key = jax.random.split(random_key)
     body_generation_fn = partial(generate_population,
                                  genome_mask=body_mask,
-                                 rnd_key=pop_key,
+                                 rnd_key=bodies_key,
                                  float_header_length=body_float_length)
-
     init_bodies = body_generation_fn(config["parents_size"])
     random_key, nns_key = jax.random.split(random_key)
     keys = jax.random.split(nns_key, num=config["parents_size"])
     fake_batch = jnp.zeros(shape=(config["parents_size"], env.observation_size))
     init_nns = jax.vmap(policy_network.init)(keys, fake_batch)
-    population = init_nns.copy({"body": init_bodies})
+    population = init_nns.copy({
+        "body": init_bodies,
+    })
 
     # util functions for iterating the frozen dicts and rearranging them into a list
     def _get_items_at_index(dictionary: Union[FrozenDict, Dict], index: int,
@@ -126,6 +121,7 @@ def run_body_evo_me(config: Dict[str, Any]):
 
     # Define genome evaluation fn -> returns fitness and brain, body, behavior descriptors
     def _evaluate_genome(genome: FrozenDict) -> Tuple[float, np.ndarray]:
+        # ignore the individual id
         nn_genome, body_genome = genome.pop("body")
         controller = controller_creation_fn(_nn_policy_creation_fn(nn_genome))
         body = body_encoding_fn(body_genome)
@@ -192,7 +188,8 @@ def run_body_evo_me(config: Dict[str, Any]):
         centroids1=brain_centroids,
         centroids2=body_centroids,
         centroids3=behavior_centroids,
-        random_key=random_key
+        random_key=random_key,
+        individual_id=True
     )
 
     headers = ["iteration", "max_fitness", "qd_score1", "qd_score2", "qd_score3", "coverage1", "coverage2", "coverage3",
