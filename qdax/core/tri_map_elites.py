@@ -4,7 +4,7 @@ from typing import Callable, Optional, Tuple
 
 import jax.numpy as jnp
 
-from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire
+from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire, MapElitesTriRepertoireWithID
 from qdax.core.emitters.emitter import Emitter, EmitterState
 from qdax.core.map_elites import MAPElites
 from qdax.types import (
@@ -64,6 +64,7 @@ class TriMAPElites(MAPElites):
             centroids2: Centroid,
             centroids3: Centroid,
             random_key: RNGKey,
+            individual_id: bool = False
     ) -> Tuple[MapElitesTriRepertoire, Optional[EmitterState], RNGKey]:
         # score initial genotypes
         fitnesses, descriptors, extra_scores, random_key = self._scoring_function(
@@ -71,7 +72,8 @@ class TriMAPElites(MAPElites):
         )
 
         # init the tri-repertoire
-        tri_repertoire = MapElitesTriRepertoire.init(
+        repertoire_class = MapElitesTriRepertoireWithID if individual_id else MapElitesTriRepertoire
+        tri_repertoire = repertoire_class.init(
             genotypes=init_genotypes,
             fitnesses=fitnesses,
             descriptors=descriptors,
