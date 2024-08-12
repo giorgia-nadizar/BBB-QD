@@ -7,6 +7,7 @@ import flax
 import jax
 import jax.numpy as jnp
 
+from bbbqd.core.pytree_utils import pytree_stack, pytree_flatten
 from qdax.core.containers.mapelites_repertoire import MapElitesRepertoire
 from qdax.types import RNGKey, Genotype, Descriptor, Fitness, ExtraScores, Centroid, Mask
 
@@ -42,15 +43,17 @@ class MapElitesTriRepertoire(flax.struct.PyTreeNode):
 
     @partial(jax.jit, static_argnames=("num_samples",))
     def sample(self, random_key: RNGKey, num_samples: int) -> Tuple[Genotype, RNGKey]:
-        genotypes = jnp.concatenate(
-            [self.repertoire1.genotypes, self.repertoire2.genotypes, self.repertoire3.genotypes])
         fitnesses = jnp.concatenate(
             [self.repertoire1.fitnesses, self.repertoire2.fitnesses, self.repertoire3.fitnesses])
-        _, unique_genotypes_indexes = jnp.unique(genotypes, axis=0, return_index=True, size=len(genotypes),
-                                                 fill_value=jnp.zeros_like(genotypes[0]))
+        genotypes = pytree_stack(
+            [self.repertoire1.genotypes, self.repertoire2.genotypes, self.repertoire3.genotypes])
+        flat_genotypes = jax.vmap(pytree_flatten)(genotypes)
+        _, unique_genotypes_indexes = jnp.unique(flat_genotypes, axis=0, return_index=True, size=len(flat_genotypes),
+                                                 fill_value=jnp.zeros_like(flat_genotypes[0]))
+        # jax.debug.print("unique: {}", unique_genotypes_indexes)
         filled_genotypes_mask = fitnesses != -jnp.inf
-        unique_genotypes_mask = jnp.isin(jnp.arange(len(genotypes)), unique_genotypes_indexes)
-        candidate_genotypes_mask = filled_genotypes_mask & unique_genotypes_mask & self.sampling_mask.astype(int)
+        unique_genotypes_mask = jnp.isin(jnp.arange(len(flat_genotypes)), unique_genotypes_indexes)
+        candidate_genotypes_mask = filled_genotypes_mask & self.sampling_mask.astype(int) & unique_genotypes_mask
         p = candidate_genotypes_mask.astype(int)
         p = p / jnp.sum(p)
         random_key, subkey = jax.random.split(random_key)
