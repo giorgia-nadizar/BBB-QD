@@ -178,21 +178,27 @@ class MapElitesTriRepertoire(flax.struct.PyTreeNode):
 class MapElitesTriRepertoireWithID(MapElitesTriRepertoire):
     n_generated_individuals: int = 0
 
-    def __init__(self, mapelites_tri_repertoire: MapElitesTriRepertoire, n_generated_individuals: int):
-        self.repertoire1 = mapelites_tri_repertoire.repertoire1
-        self.repertoire2 = mapelites_tri_repertoire.repertoire2
-        self.repertoire3 = mapelites_tri_repertoire.repertoire3
-        self.descriptors_indexes1 = mapelites_tri_repertoire.descriptors_indexes1
-        self.descriptors_indexes2 = mapelites_tri_repertoire.descriptors_indexes2
-        self.descriptors_indexes3 = mapelites_tri_repertoire.descriptors_indexes3
-        self.sampling_mask = mapelites_tri_repertoire.sampling_mask
-        self.n_generated_individuals = n_generated_individuals
+    @classmethod
+    def from_mapelites_tri_repertoire(cls,
+                                      mapelites_tri_repertoire: MapElitesTriRepertoire,
+                                      n_generated_individuals: int
+                                      ) -> MapElitesTriRepertoireWithID:
+        return cls(
+            mapelites_tri_repertoire.repertoire1,
+            mapelites_tri_repertoire.repertoire2,
+            mapelites_tri_repertoire.repertoire3,
+            mapelites_tri_repertoire.descriptors_indexes1,
+            mapelites_tri_repertoire.descriptors_indexes2,
+            mapelites_tri_repertoire.descriptors_indexes3,
+            mapelites_tri_repertoire.sampling_mask,
+            n_generated_individuals
+        )
 
     # Same semantics as in MapElitesTriRepertoire
     @jax.jit
     def update_sampling_mask(self, sampling_id: int) -> MapElitesTriRepertoireWithID:
         updated_me_tri_repertoire = super().update_sampling_mask(sampling_id)
-        return MapElitesTriRepertoireWithID(
+        return self.from_mapelites_tri_repertoire(
             updated_me_tri_repertoire,
             self.n_generated_individuals
         )
@@ -241,7 +247,7 @@ class MapElitesTriRepertoireWithID(MapElitesTriRepertoire):
             batch_of_fitnesses,
             batch_of_extra_scores
         )
-        new_me_tri_repertoire_with_id = MapElitesTriRepertoireWithID(
+        new_me_tri_repertoire_with_id = self.from_mapelites_tri_repertoire(
             updated_me_tri_repertoire,
             n_generated_individuals
         )
@@ -279,4 +285,4 @@ class MapElitesTriRepertoireWithID(MapElitesTriRepertoire):
             centroids3,
             extra_scores
         )
-        return MapElitesTriRepertoireWithID(me_tri_repertoire, n_generated_individuals)
+        return cls.from_mapelites_tri_repertoire(me_tri_repertoire, n_generated_individuals)
