@@ -176,6 +176,7 @@ def run_body_evo_me(config: Dict[str, Any]):
         descriptors_indexes2=jnp.asarray([2, 3]),
         descriptors_indexes3=jnp.asarray([4, 5]),
         sampling_id_function=sampling_id_fn,
+        track_individual_id=True
     )
 
     brain_centroids = jnp.load("data/nn_centroids.npy")
@@ -189,7 +190,6 @@ def run_body_evo_me(config: Dict[str, Any]):
         centroids2=body_centroids,
         centroids3=behavior_centroids,
         random_key=random_key,
-        individual_id=True
     )
 
     headers = ["iteration", "max_fitness", "qd_score1", "qd_score2", "qd_score3", "coverage1", "coverage2", "coverage3",
@@ -271,22 +271,22 @@ if __name__ == '__main__':
             # "CaveCrawler-v0",
             # "Carrier-v0"
             ]
-    envs_descriptors = {
-        # "Walker-v0": {
-        #     "behavior_descriptors": ["velocity_y", "floor_contact"],
-        #     "qd_wrappers": ["velocity", "floor_contact"],
-        #     "frequency_cut_off": 0.5
-        # },
-        # "Climber-v0": {
-        #    "behavior_descriptors": ["floor_contact", "walls_contact"],
-        #    "qd_wrappers": ["floor_contact", "walls_contact"],
-        #    "body_trim": True
-        # },
-        # "CustomCarrier-v0": {
-        #     "behavior_descriptors": ["object_angle", "floor_contact"],
-        #     "qd_wrappers": ["object_angle", "floor_contact"],
-        # }
-    }
+    # envs_descriptors = {
+    # "Walker-v0": {
+    #     "behavior_descriptors": ["velocity_y", "floor_contact"],
+    #     "qd_wrappers": ["velocity", "floor_contact"],
+    #     "frequency_cut_off": 0.5
+    # },
+    # "Climber-v0": {
+    #    "behavior_descriptors": ["floor_contact", "walls_contact"],
+    #    "qd_wrappers": ["floor_contact", "walls_contact"],
+    #    "body_trim": True
+    # },
+    # "CustomCarrier-v0": {
+    #     "behavior_descriptors": ["object_angle", "floor_contact"],
+    #     "qd_wrappers": ["object_angle", "floor_contact"],
+    # }
+    # }
 
     base_cfg = {
         "p_mut_body": 0.05,
