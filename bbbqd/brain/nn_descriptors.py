@@ -7,7 +7,7 @@ def count_weights_above_threshold_per_neuron(nn_params: FrozenDict, threshold: f
     for layer_name, layer_params in nn_params.items():
         if 'kernel' in layer_params:
             kernel = layer_params['kernel']
-            count = jnp.sum(kernel > threshold, axis=1) / kernel.shape[1]
+            count = jnp.sum(jnp.abs(kernel) > threshold, axis=1) / kernel.shape[1]
             counts.append(count)
     return jnp.concatenate(counts)
 
