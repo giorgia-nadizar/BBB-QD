@@ -13,7 +13,7 @@ from typing import Tuple, Dict, Any, Callable, List, Union
 import numpy as np
 import yaml
 from flax.core import FrozenDict, frozen_dict
-from jax import vmap
+from jax import vmap, jit
 
 from bbbqd.behavior.behavior_descriptors import get_behavior_descriptors_functions
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
@@ -23,6 +23,7 @@ from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor, get_nn
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.core.misc import isoline_and_body_mutation
+from bbbqd.core.pytree_utils import pytree_flatten, pytree_stack
 from bbbqd.core.validation import count_invalid_bodies, validate_body_width
 from bbbqd.wrappers import make_env
 from qdax.core.emitters.mutation_operators import isoline_variation
@@ -75,10 +76,11 @@ def run_body_evo_me(config: Dict[str, Any]):
 
     # Define function to return the proper nn policy and controller
     def _nn_policy_creation_fn(policy_params: FrozenDict) -> Callable[[jnp.ndarray], jnp.ndarray]:
-        def _nn_policy_fn(actions: jnp.ndarray) -> jnp.ndarray:
-            return policy_network.apply(policy_params, actions)
+        def _nn_policy_fn(observations: jnp.ndarray) -> jnp.ndarray:
+            actions = policy_network.apply(policy_params, observations)
+            return actions
 
-        return _nn_policy_fn
+        return jit(_nn_policy_fn)
 
     controller_creation_fn = compute_controller_generation_fn(config)
 
@@ -180,7 +182,7 @@ def run_body_evo_me(config: Dict[str, Any]):
         sampling_id_function=sampling_id_fn,
     )
 
-    brain_centroids = jnp.load("data/brain_centroids.npy")
+    brain_centroids = jnp.load("data/nn_centroids.npy")
     body_centroids = jnp.load("data/body_centroids.npy")
     behavior_centroids = jnp.load("data/behavior_centroids.npy")
 
