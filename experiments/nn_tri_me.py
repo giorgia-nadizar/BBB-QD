@@ -255,7 +255,7 @@ def run_body_evo_me(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     # samplers = ["all", "s1", "s2", "s3"]
-    seeds = range(1)
+    seeds = range(5)
     samplers = ["all"]
     envs = ["Walker-v0"
             # "BridgeWalker-v0",
@@ -292,8 +292,8 @@ if __name__ == '__main__':
         "p_mut_body": 0.05,
         "solver": "ne",
         "episode_length": 200,
-        "pop_size": 5,
-        "parents_size": 4,
+        "pop_size": 50,
+        "parents_size": 45,
         "n_iterations": 4000,
         "controller": "local",
         "flags": {
