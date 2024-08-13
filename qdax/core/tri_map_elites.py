@@ -44,6 +44,7 @@ class TriMAPElites(MAPElites):
             descriptors_indexes3: jnp.ndarray = jnp.asarray([]),
             sampling_id_function: Callable[[MapElitesTriRepertoire], int] = lambda x: 0,
             invalidity_counter: Callable[[Genotype], int] = lambda genotype: 0,
+            track_individual_id: bool = False
             # Note: sampling id semantics
             # 0 = sample from all
             # 1 = sample from first
@@ -55,6 +56,7 @@ class TriMAPElites(MAPElites):
         self._descriptors_indexes2 = descriptors_indexes2
         self._descriptors_indexes3 = descriptors_indexes3
         self._sampling_id_function = sampling_id_function
+        self._track_individual_id = track_individual_id
 
     # @partial(jax.jit, static_argnames=("self",))
     def init(
@@ -64,7 +66,6 @@ class TriMAPElites(MAPElites):
             centroids2: Centroid,
             centroids3: Centroid,
             random_key: RNGKey,
-            individual_id: bool = False
     ) -> Tuple[MapElitesTriRepertoire, Optional[EmitterState], RNGKey]:
         # score initial genotypes
         fitnesses, descriptors, extra_scores, random_key = self._scoring_function(
@@ -72,7 +73,7 @@ class TriMAPElites(MAPElites):
         )
 
         # init the tri-repertoire
-        repertoire_class = MapElitesTriRepertoireWithID if individual_id else MapElitesTriRepertoire
+        repertoire_class = MapElitesTriRepertoireWithID if self._track_individual_id else MapElitesTriRepertoire
         tri_repertoire = repertoire_class.init(
             genotypes=init_genotypes,
             fitnesses=fitnesses,
