@@ -255,8 +255,8 @@ def run_body_evo_me(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     # samplers = ["all", "s1", "s2", "s3"]
-    seeds = range(5)
-    samplers = ["all"]
+    seeds = range(10)
+    samplers = ["all", "s3"]
     envs = ["Walker-v0"
             # "BridgeWalker-v0",
             # "Pusher-v0",
@@ -326,6 +326,10 @@ if __name__ == '__main__':
     counter = 0
     for seed in seeds:
         for sampler in samplers:
+            if seed < 5 and sampler == "all":
+                counter += 1
+                continue
+
             # for env in envs_descriptors.keys():
             for env in envs:
                 counter += 1
