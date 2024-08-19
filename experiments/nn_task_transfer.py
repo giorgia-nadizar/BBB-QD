@@ -353,10 +353,10 @@ if __name__ == '__main__':
             repertoire_path = f"../results/ga/{base_name}_{seed}/"
             run_task_transfer_ga(repertoire_path, environments)
 
-    if "me" in algorithms:
-        samplers = ["all", "s1", "s2", "s3"]
-        for sampler in samplers:
-            for seed in seeds:
-                print(f"me-{sampler}, {seed}")
-                repertoire_path = f"../results/me_nn/{base_name.replace('-nn', '')}-{sampler}_{seed}/"
-                run_task_transfer_me(repertoire_path, environments)
+    # if "me" in algorithms:
+    #     samplers = ["all", "s1", "s2", "s3"]
+    #     for sampler in samplers:
+    #         for seed in seeds:
+    #             print(f"me-{sampler}, {seed}")
+    #             repertoire_path = f"../results/me_nn/{base_name.replace('-nn', '')}-{sampler}_{seed}/"
+    #             run_task_transfer_me(repertoire_path, environments)
