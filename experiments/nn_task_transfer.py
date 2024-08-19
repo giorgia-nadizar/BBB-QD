@@ -56,9 +56,11 @@ def _rearrange_genomes(genomes: FrozenDict) -> List[FrozenDict]:
 
 
 def filter_genomes(genomes: FrozenDict, fitnesses: jnp.ndarray) -> FrozenDict:
-    indexes_to_keep = jnp.where(fitnesses > -jnp.inf)
-    list_of_genomes_to_keep = [frozen_dict.freeze(_get_items_at_index(genomes, g_idx)) for g_idx in indexes_to_keep[0]]
-    genomes_to_keep = pytree_stack(list_of_genomes_to_keep)
+    print(genomes["params"]["Dense_0"]["kernel"].shape)
+    print(genomes["params"]["Dense_1"]["kernel"].shape)
+    print(genomes["params"]["Dense_2"]["kernel"].shape)
+    indexes_to_keep = jnp.where(fitnesses > -jnp.inf)[0]
+    genomes_to_keep = frozen_dict.freeze(_get_items_at_index(genomes, indexes_to_keep))
     return genomes_to_keep
 
 
@@ -291,7 +293,6 @@ def run_task_transfer_me(
             while start_idx < len(genomes_list):
                 with Pool(pool_size) as p:
                     current_genomes = genomes_list[start_idx:min(start_idx + pool_size, len(genomes_list))]
-                    print(len(current_genomes))
                     current_fitnesses_descriptors = p.map(_evaluate_genome, current_genomes)
                     for fitness, desc in current_fitnesses_descriptors:
                         fitnesses.append(fitness)
