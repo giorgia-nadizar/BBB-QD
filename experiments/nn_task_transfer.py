@@ -56,9 +56,6 @@ def _rearrange_genomes(genomes: FrozenDict) -> List[FrozenDict]:
 
 
 def filter_genomes(genomes: FrozenDict, fitnesses: jnp.ndarray) -> FrozenDict:
-    print(genomes["params"]["Dense_0"]["kernel"].shape)
-    print(genomes["params"]["Dense_1"]["kernel"].shape)
-    print(genomes["params"]["Dense_2"]["kernel"].shape)
     indexes_to_keep = jnp.where(fitnesses > -jnp.inf)[0]
     genomes_to_keep = frozen_dict.freeze(_get_items_at_index(genomes, indexes_to_keep))
     return genomes_to_keep
