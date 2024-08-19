@@ -236,7 +236,7 @@ def run_task_transfer_me(
 
 if __name__ == '__main__':
 
-    algorithms = ["ga", ]  # "me"]
+    algorithms = ["ga", "me"]
 
     environments = [
         ("BridgeWalker-v0", 200),
