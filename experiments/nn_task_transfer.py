@@ -269,6 +269,7 @@ def run_task_transfer_me(
         # Define genome evaluation fn -> returns fitness and brain, body, behavior descriptors
         def _evaluate_genome(genome: FrozenDict) -> Tuple[float, np.ndarray]:
             # ignore the individual id
+            genome, _ = genome.pop("individual_id")
             nn_genome, body_genome = genome.pop("body")
             controller = controller_creation_fn(_nn_policy_creation_fn(nn_genome))
             body = body_encoding_fn(body_genome)
