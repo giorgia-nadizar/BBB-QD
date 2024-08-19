@@ -291,6 +291,7 @@ def run_task_transfer_me(
             while start_idx < len(genomes_list):
                 with Pool(pool_size) as p:
                     current_genomes = genomes_list[start_idx:min(start_idx + pool_size, len(genomes_list))]
+                    print(len(current_genomes))
                     current_fitnesses_descriptors = p.map(_evaluate_genome, current_genomes)
                     for fitness, desc in current_fitnesses_descriptors:
                         fitnesses.append(fitness)
