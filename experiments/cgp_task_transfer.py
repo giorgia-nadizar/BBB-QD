@@ -5,10 +5,8 @@ from pathlib import Path
 from typing import List, Tuple
 
 import jax.numpy as jnp
-
 import numpy as np
 import yaml
-from nbformat.sign import algorithms
 
 from bbbqd.behavior.behavior_descriptors import get_behavior_descriptors_functions
 from bbbqd.body.body_descriptors import get_body_descriptor_extractor
@@ -54,12 +52,6 @@ def run_task_transfer_ga(
     # extract genotypes
     genotypes = initial_repertoire.genotypes
 
-    # extract fitnesses to filter out empty cells
-    fitnesses = initial_repertoire.fitnesses
-
-    # filter genotypes
-    genotypes = genotypes[fitnesses > - jnp.inf]
-
     for env_name, episode_length in environments:
         print(f"\t{env_name}")
         config["env_name"] = env_name
@@ -70,7 +62,7 @@ def run_task_transfer_ga(
 
         # Define genome evaluation fn
         def _evaluate_genome(genome: jnp.ndarray) -> float:
-            body_genome, controller_genome = jnp.split(genome, [len(body_mask) + body_float_length])
+            body_genome, controller_genome = jnp.split(genome, [body_mask_length + body_float_length])
             controller = controller_creation_fn(program_encoding_fn(controller_genome))
             body = body_encoding_fn(body_genome)
             return evaluation_fn(controller, body)
