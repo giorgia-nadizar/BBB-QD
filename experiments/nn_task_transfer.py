@@ -96,7 +96,7 @@ def run_task_transfer_ga(
         environments: List[Tuple[str, int]]
 ) -> None:
     # load config
-    config = yaml.safe_load(Path(f"{repertoire_path}/config.yaml").read_text())
+    config = yaml.load(Path(f"{repertoire_path}/config.yaml").read_text(), Loader=yaml.FullLoader)
 
     env = make_env(config)
 
@@ -191,7 +191,7 @@ def run_task_transfer_me(
         environments: List[Tuple[str, int]]
 ) -> None:
     # load config
-    config = yaml.safe_load(Path(f"{repertoire_path}/config.yaml").read_text())
+    config = yaml.load(Path(f"{repertoire_path}/config.yaml").read_text(), Loader=yaml.FullLoader)
     env = make_env(config)
 
     # Init policy network
