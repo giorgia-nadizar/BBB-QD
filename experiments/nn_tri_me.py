@@ -256,37 +256,21 @@ def run_body_evo_me(config: Dict[str, Any]):
 if __name__ == '__main__':
     # samplers = ["all", "s1", "s2", "s3"]
     seeds = range(10)
-    samplers = ["all", "s3"]
-    envs = ["Walker-v0"
-            # "BridgeWalker-v0",
-            # "Pusher-v0",
-            # "UpStepper-v0",
-            # "DownStepper-v0",
-            # "ObstacleTraverser-v0",
+    samplers = ["all"]
+    envs = [  # "Walker-v0"
+        "BridgeWalker-v0",
+        # "Pusher-v0",
+        # "UpStepper-v0",
+        # "DownStepper-v0",
+        # "ObstacleTraverser-v0",
 
-            # "ObstacleTraverser-v1",
-            # "Hurdler-v0",
-            # "PlatformJumper-v0",
-            # "GapJumper-v0",
-            # "CaveCrawler-v0",
-            # "Carrier-v0"
-            ]
-    # envs_descriptors = {
-    # "Walker-v0": {
-    #     "behavior_descriptors": ["velocity_y", "floor_contact"],
-    #     "qd_wrappers": ["velocity", "floor_contact"],
-    #     "frequency_cut_off": 0.5
-    # },
-    # "Climber-v0": {
-    #    "behavior_descriptors": ["floor_contact", "walls_contact"],
-    #    "qd_wrappers": ["floor_contact", "walls_contact"],
-    #    "body_trim": True
-    # },
-    # "CustomCarrier-v0": {
-    #     "behavior_descriptors": ["object_angle", "floor_contact"],
-    #     "qd_wrappers": ["object_angle", "floor_contact"],
-    # }
-    # }
+        # "ObstacleTraverser-v1",
+        # "Hurdler-v0",
+        "PlatformJumper-v0",
+        # "GapJumper-v0",
+        "CaveCrawler-v0",
+        "CustomCarrier-v0"
+    ]
 
     base_cfg = {
         "p_mut_body": 0.05,
@@ -326,10 +310,6 @@ if __name__ == '__main__':
     counter = 0
     for seed in seeds:
         for sampler in samplers:
-            if seed < 5 and sampler == "all":
-                counter += 1
-                continue
-
             # for env in envs_descriptors.keys():
             for env in envs:
                 counter += 1
