@@ -18,6 +18,7 @@ from bbbqd.body.body_utils import compute_body_encoding_function, compute_body_f
 from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor, get_nn_descriptor_extractor
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
+from bbbqd.core.pytree_utils import pytree_stack
 from bbbqd.wrappers import make_env
 from qdax.core.containers.ga_repertoire import GARepertoire
 from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire
@@ -52,6 +53,13 @@ def _get_items_at_index(dictionary: Union[FrozenDict, Dict], index: int,
 
 def _rearrange_genomes(genomes: FrozenDict) -> List[FrozenDict]:
     return [frozen_dict.freeze(_get_items_at_index(genomes, g)) for g in range(len(genomes["body"]))]
+
+
+def filter_genomes(genomes: FrozenDict, fitnesses: jnp.ndarray) -> FrozenDict:
+    indexes_to_keep = jnp.where(fitnesses > -jnp.inf)
+    list_of_genomes_to_keep = [frozen_dict.freeze(_get_items_at_index(genomes, g_idx)) for g_idx in indexes_to_keep[0]]
+    genomes_to_keep = pytree_stack(list_of_genomes_to_keep)
+    return genomes_to_keep
 
 
 def compute_reconstruction_fn(
@@ -246,9 +254,9 @@ def run_task_transfer_me(
     fitnesses3 = initial_repertoire.repertoire3.fitnesses
 
     # filter genotypes
-    genotypes1 = genotypes1[fitnesses1 > - jnp.inf]
-    genotypes2 = genotypes2[fitnesses2 > - jnp.inf]
-    genotypes3 = genotypes3[fitnesses3 > - jnp.inf]
+    genotypes1 = filter_genomes(genotypes1, fitnesses1)
+    genotypes2 = filter_genomes(genotypes2, fitnesses2)
+    genotypes3 = filter_genomes(genotypes3, fitnesses3)
 
     for env_name, episode_length in environments:
         print(f"\t{env_name}")
@@ -347,16 +355,16 @@ if __name__ == '__main__':
     seeds = range(10)
     base_name = "evo-body-nn-10x10-walker"
 
-    if "ga" in algorithms:
-        for seed in seeds:
-            print(f"ga, {seed}")
-            repertoire_path = f"../results/ga/{base_name}_{seed}/"
-            run_task_transfer_ga(repertoire_path, environments)
+    # if "ga" in algorithms:
+    #     for seed in seeds:
+    #         print(f"ga, {seed}")
+    #         repertoire_path = f"../results/ga/{base_name}_{seed}/"
+    #         run_task_transfer_ga(repertoire_path, environments)
 
-    # if "me" in algorithms:
-    #     samplers = ["all", "s1", "s2", "s3"]
-    #     for sampler in samplers:
-    #         for seed in seeds:
-    #             print(f"me-{sampler}, {seed}")
-    #             repertoire_path = f"../results/me_nn/{base_name.replace('-nn', '')}-{sampler}_{seed}/"
-    #             run_task_transfer_me(repertoire_path, environments)
+    if "me" in algorithms:
+        samplers = ["all", "s1", "s2", "s3"]
+        for sampler in samplers:
+            for seed in seeds:
+                print(f"me-{sampler}, {seed}")
+                repertoire_path = f"../results/me_nn/{base_name.replace('-nn', '')}-{sampler}_{seed}/"
+                run_task_transfer_me(repertoire_path, environments)
