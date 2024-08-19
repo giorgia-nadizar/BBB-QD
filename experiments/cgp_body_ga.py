@@ -194,12 +194,29 @@ if __name__ == '__main__':
         "fixed_body": False,
     }
 
+    envs = [  # "Walker-v0"
+        "BridgeWalker-v0",
+        # "Pusher-v0",
+        # "UpStepper-v0",
+        # "DownStepper-v0",
+        # "ObstacleTraverser-v0",
+
+        # "ObstacleTraverser-v1",
+        # "Hurdler-v0",
+        "PlatformJumper-v0",
+        # "GapJumper-v0",
+        "CaveCrawler-v0",
+        "CustomCarrier-v0"
+    ]
+
     counter = 0
-    for seed in seeds:
-        counter += 1
-        cfg = copy.deepcopy(base_cfg)
-        cfg["seed"] = seed
-        cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}"
-        print(
-            f"{counter}/{len(seeds)} -> evo-body-cgp-{cfg['grid_size']}x{cfg['grid_size']}, {seed}")
-        run_body_evo_ga(cfg)
+    for env in envs:
+        for seed in seeds:
+            counter += 1
+            cfg = copy.deepcopy(base_cfg)
+            cfg["seed"] = seed
+            cfg["env_name"] = env
+            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-{env.replace('-v0', '').lower()}"
+            print(
+                f"{counter}/{len(seeds) * len(envs)} -> evo-body-cgp-{cfg['grid_size']}x{cfg['grid_size']}, {env}, {seed}")
+            run_body_evo_ga(cfg)

@@ -187,20 +187,20 @@ def run_body_evo_ga(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     seeds = range(10)
-    envs = ["Walker-v0"
-            # "BridgeWalker-v0",
-            # "Pusher-v0",
-            # "UpStepper-v0",
-            # "DownStepper-v0",
-            # "ObstacleTraverser-v0",
+    envs = [  # "Walker-v0"
+        "BridgeWalker-v0",
+        # "Pusher-v0",
+        # "UpStepper-v0",
+        # "DownStepper-v0",
+        # "ObstacleTraverser-v0",
 
-            # "ObstacleTraverser-v1",
-            # "Hurdler-v0",
-            # "PlatformJumper-v0",
-            # "GapJumper-v0",
-            # "CaveCrawler-v0",
-            # "Carrier-v0"
-            ]
+        # "ObstacleTraverser-v1",
+        # "Hurdler-v0",
+        "PlatformJumper-v0",
+        # "GapJumper-v0",
+        "CaveCrawler-v0",
+        "CustomCarrier-v0"
+    ]
     base_cfg = {
         "p_mut_body": 0.05,
         "solver": "ne",
