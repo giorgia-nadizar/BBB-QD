@@ -7,6 +7,26 @@ from bbbqd.brain.controllers import ControllerWrapper, Controller
 from bbbqd.wrappers import make_env
 
 
+def track_experience_controller_and_body(controller: Union[Controller, ControllerWrapper],
+                                         body: Union[np.ndarray, None],
+                                         config: Dict[str, Any]) -> Union[Tuple[float, np.ndarray], float]:
+    observations = []
+    env = make_env(config, body)
+    cumulative_reward = 0
+    obs = env.reset()
+    observations.append(obs)
+    for _ in range(config["episode_length"]):
+        action = controller.compute_action(obs)
+        obs, reward, done, info = env.step(action)
+        observations.append(obs)
+        cumulative_reward += reward
+        if done:
+            break
+
+    env.close()
+    return cumulative_reward, np.vstack(observations)
+
+
 def evaluate_controller_and_body(controller: Union[Controller, ControllerWrapper],
                                  body: Union[np.ndarray, None],
                                  config: Dict[str, Any],
