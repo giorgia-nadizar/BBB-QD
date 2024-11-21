@@ -1,8 +1,6 @@
-import os
 from functools import partial
-from multiprocessing import Pool
 from pathlib import Path
-from typing import Tuple, Callable, Union, Dict
+from typing import Callable, Union, Dict
 
 import jax
 import jax.numpy as jnp
@@ -10,21 +8,15 @@ import numpy as np
 import yaml
 from flax.core import FrozenDict, frozen_dict
 from jax import jit
+from sklearn_extra.cluster import KMedoids
 
-from bbbqd.behavior.behavior_descriptors import get_behavior_descriptors_functions
-from bbbqd.body.body_descriptors import get_body_descriptor_extractor
-from bbbqd.body.body_utils import compute_body_encoding_function, compute_body_float_genome_length, compute_body_mask
-from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor, get_nn_descriptor_extractor
+from bbbqd.body.body_utils import compute_body_encoding_function
 from bbbqd.brain.controllers import compute_controller_generation_fn
-from bbbqd.core.evaluation import evaluate_controller_and_body, track_experience_controller_and_body
+from bbbqd.core.evaluation import track_experience_controller_and_body
 from bbbqd.wrappers import make_env
-from experiments.nn_task_transfer import compute_reconstruction_fn, filter_genomes, _rearrange_genomes
+from experiments.nn_task_transfer import compute_reconstruction_fn
 from qdax.core.containers.ga_repertoire import GARepertoire
-from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire
-from qdax.core.gp.encoding import compute_encoding_function
 from qdax.core.neuroevolution.networks.networks import MLP
-from qdax.types import RNGKey, Fitness, Descriptor, ExtraScores
-from qdax.utils.metrics import default_triqd_metrics, CSVLogger
 
 
 def _get_items_at_index(dictionary: Union[FrozenDict, Dict], index: int,
@@ -89,6 +81,7 @@ def collect_nn_experience(
 
 
 if __name__ == '__main__':
+    n_data_points = 100
 
     tasks = ["Walker-v0", "BridgeWalker-v0", "CustomCarrier-v0", "PlatformJumper-v0", "CaveCrawler-v0"]
 
@@ -98,9 +91,11 @@ if __name__ == '__main__':
         task_name = task.replace("-v0", "").lower()
         task_obs = []
         for seed in seeds:
-            print(f"NN-{task}, {seed}")
+            print(f"NN-{task_name}, {seed}")
             rep_path = f"../results/ga/evo-body-nn-10x10-{task_name}_{seed}/"
             task_obs.append(collect_nn_experience(rep_path))
         task_obs_matrix = np.vstack(task_obs)
-        print(task_obs_matrix.shape)
+        kmedoids = KMedoids(n_clusters=n_data_points, random_state=0).fit(task_obs_matrix)
+        representative_points = kmedoids.cluster_centers_
+        print(f"Extracted representative points for task {task_name} of shape {representative_points.shape}\n")
         np.save(f"../experiments/data/nn_data_{task_name}.npy", task_obs_matrix)
