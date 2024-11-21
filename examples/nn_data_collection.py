@@ -95,7 +95,8 @@ if __name__ == '__main__':
             rep_path = f"../results/ga/evo-body-nn-10x10-{task_name}_{seed}/"
             task_obs.append(collect_nn_experience(rep_path))
         task_obs_matrix = np.vstack(task_obs)
+
         kmedoids = KMedoids(n_clusters=n_data_points, random_state=0).fit(task_obs_matrix)
         representative_points = kmedoids.cluster_centers_
-        print(f"Extracted representative points for task {task_name} of shape {representative_points.shape}\n")
-        np.save(f"../experiments/data/nn_data_{task_name}.npy", task_obs_matrix)
+        print(f"Extracted {n_data_points} representative points for task {task_name}\n")
+        np.save(f"../experiments/data/nn_data_{task_name}.npy", representative_points)
