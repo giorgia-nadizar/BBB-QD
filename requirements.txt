@@ -27,6 +27,7 @@ PyOpenGL-accelerate==3.1.5
 pyyaml~=6.0.1
 protobuf==3.19.4
 scikit-learn==1.0.2
+scikit-learn-extra~=0.3.0
 scipy==1.8.0
 seaborn==0.11.2
 torch==1.10.2
