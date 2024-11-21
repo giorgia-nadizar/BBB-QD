@@ -85,7 +85,6 @@ if __name__ == '__main__':
 
     tasks = ["Walker-v0", "BridgeWalker-v0", "CustomCarrier-v0", "PlatformJumper-v0", "CaveCrawler-v0"]
 
-    #
     seeds = range(10)
     for task in tasks:
         task_name = task.replace("-v0", "").lower()
