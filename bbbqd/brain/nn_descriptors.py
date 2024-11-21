@@ -1,5 +1,24 @@
 import jax.numpy as jnp
+import numpy as np
 from flax.core import FrozenDict
+import flax.linen as nn
+from jax import vmap
+from jax._src.flatten_util import ravel_pytree
+
+
+def mean_and_std_activity(policy_network: nn.Module, nn_params: FrozenDict, data_points: np.ndarray,
+                          threshold: float = 0.25) -> jnp.ndarray:
+    n_inner_neurons = sum(policy_network.layer_sizes[:-1])
+
+    def _counting_fn(point: jnp.ndarray):
+        _, inter_res = policy_network.apply(nn_params, point, capture_intermediates=True)
+        flatten_res, _ = ravel_pytree(inter_res)
+        activations, _ = jnp.split(flatten_res, [n_inner_neurons])
+        return jnp.sum(jnp.abs(activations) > threshold) / n_inner_neurons
+
+    data_activations = vmap(_counting_fn)(data_points)
+    mean_value, std_value = jnp.mean(data_activations), jnp.std(data_activations)
+    return jnp.asarray([mean_value, std_value * 2.])
 
 
 def count_weights_above_threshold_per_neuron(nn_params: FrozenDict, threshold: float) -> jnp.ndarray:
