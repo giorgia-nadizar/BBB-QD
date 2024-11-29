@@ -16,7 +16,6 @@ from sklearn_extra.cluster import KMedoids
 from bbbqd.body.body_utils import compute_body_encoding_function
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import track_experience_controller_and_body
-from bbbqd.wrappers import make_env
 from experiments.nn_task_transfer import compute_reconstruction_fn
 from qdax.core.containers.ga_repertoire import GARepertoire
 from qdax.core.neuroevolution.networks.networks import MLP
