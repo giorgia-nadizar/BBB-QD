@@ -68,22 +68,18 @@ def collect_nn_experience(
     genotypes = repertoire.genotypes
     fitnesses = repertoire.fitnesses
 
-    obs_list = []
+    # take only best genotype
+    current_genotype = _get_items_at_index(genotypes, jnp.argmax(fitnesses))
+    nn_genome, body_genome = current_genotype.pop("body")
+    controller = controller_creation_fn(_nn_policy_creation_fn(nn_genome))
+    body = body_encoding_fn(body_genome)
 
-    for geno_idx in range(len(fitnesses)):
-        # take only best genotype
-        current_genotype = _get_items_at_index(genotypes, geno_idx)
-        nn_genome, body_genome = current_genotype.pop("body")
-        controller = controller_creation_fn(_nn_policy_creation_fn(nn_genome))
-        body = body_encoding_fn(body_genome)
+    # Create tracking function
+    tracking_fn = partial(track_experience_controller_and_body, config=config)
 
-        # Create tracking function
-        tracking_fn = partial(track_experience_controller_and_body, config=config)
+    _, observations = tracking_fn(controller, body)
 
-        _, observations = tracking_fn(controller, body)
-        obs_list.append(observations)
-
-    return np.vstack(obs_list)
+    return observations
 
 
 def eval_repertoire_on_data(
@@ -170,11 +166,11 @@ def activations_collection(tasks: Iterable[str], seeds: Iterable[int]) -> List[s
 
 
 if __name__ == '__main__':
-    file_names = experiences_collection(
-        n_data_points=100,
-        tasks=["Walker-v0", "BridgeWalker-v0", "CustomCarrier-v0", "PlatformJumper-v0", "CaveCrawler-v0"],
-        seeds=range(10),
-    )
+    # file_names = experiences_collection(
+    #     n_data_points=100,
+    #     tasks=["Walker-v0", "BridgeWalker-v0", "CustomCarrier-v0", "PlatformJumper-v0", "CaveCrawler-v0"],
+    #     seeds=range(10),
+    # )
 
     df_names = activations_collection(
         seeds=range(10),
