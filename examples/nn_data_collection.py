@@ -161,7 +161,7 @@ def activations_collection(tasks: Iterable[str], seeds: Iterable[int]) -> List[s
             task_dfs.append(df)
         task_df = pd.concat(task_dfs, ignore_index=True)
         task_df["task"] = task_name
-        task_df.to_csv(f"../experiments/data/nn_activations_{task_name}.tsv", index=False)
+        task_df.to_csv(f"../experiments/data/nn_activations_{task_name}.csv", index=False)
 
 
 if __name__ == '__main__':
