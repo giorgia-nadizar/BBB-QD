@@ -2,6 +2,8 @@ from functools import partial
 from typing import Dict, Tuple, Callable
 
 import jax.numpy as jnp
+import joblib
+import numpy as np
 from jax import vmap
 
 from bbbqd.brain.nn_descriptors import mean_and_std_output_connectivity
@@ -11,10 +13,16 @@ from qdax.types import Genotype, Descriptor
 
 def get_nn_descriptor_extractor(config: Dict) -> Tuple[Callable[[Genotype], Descriptor], int]:
     assert config["solver"] == "ne"
-    assert "nn_connectivity" in config["brain_descriptors"]
-
-    weights_threshold = config.get("weights_threshold", 0.25)
-    return partial(mean_and_std_output_connectivity, threshold=weights_threshold), 2
+    if config["brain_descriptors"] == "nn_connectivity":
+        weights_threshold = config.get("weights_threshold", 0.25)
+        return partial(mean_and_std_output_connectivity, threshold=weights_threshold), 2
+    elif config["brain_descriptors"] == "activations_dimensionality_reduction":
+        data_points = jnp.asarray(np.load(config.get("data_points", "data/nn_data_walker.npy")))
+        scaler = joblib.load(config.get("scaler", "data/nn_obs_scaler.pkl"))
+        pca = joblib.load(config.get("pca", "data/nn_obs_pca.pkl"))
+        return partial(mean_and_std_output_connectivity, scaler=scaler, pca=pca, data_points=data_points), 2
+    else:
+        raise NotImplementedError
 
 
 def get_graph_descriptor_extractor(config: Dict) -> Tuple[Callable[[Genotype], Descriptor], int]:
