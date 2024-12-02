@@ -51,7 +51,7 @@ def mean_and_std_activity(policy_network: nn.Module, nn_params: FrozenDict, data
         _, inter_res = policy_network.apply(nn_params, point, capture_intermediates=True)
         flatten_res, _ = ravel_pytree(inter_res)
         activations, _ = jnp.split(flatten_res, [n_inner_neurons])
-        return jnp.sum(jnp.abs(activations) > threshold) / n_inner_neurons
+        return jnp.sum(activations > threshold) / n_inner_neurons
 
     data_activations = vmap(_counting_fn)(data_points)
     mean_value, std_value = jnp.mean(data_activations), jnp.std(data_activations)
