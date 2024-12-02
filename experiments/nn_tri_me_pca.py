@@ -257,20 +257,23 @@ if __name__ == '__main__':
     # samplers = ["all", "s1", "s2", "s3"]
     seeds = range(10)
     samplers = ["all"]
-    envs = [  # "Walker-v0"
-        "BridgeWalker-v0",
-        # "Pusher-v0",
-        # "UpStepper-v0",
-        # "DownStepper-v0",
-        # "ObstacleTraverser-v0",
+    envs = ["Walker-v0"
+            # "BridgeWalker-v0",
+            # "PlatformJumper-v0",
+            # "CaveCrawler-v0",
+            # "CustomCarrier-v0"
 
-        # "ObstacleTraverser-v1",
-        # "Hurdler-v0",
-        "PlatformJumper-v0",
-        # "GapJumper-v0",
-        "CaveCrawler-v0",
-        "CustomCarrier-v0"
-    ]
+            # "Pusher-v0",
+            # "UpStepper-v0",
+            # "DownStepper-v0",
+            # "ObstacleTraverser-v0",
+
+            # "ObstacleTraverser-v1",
+            # "Hurdler-v0",
+
+            # "GapJumper-v0",
+
+            ]
 
     base_cfg = {
         "p_mut_body": 0.05,
@@ -298,8 +301,7 @@ if __name__ == '__main__':
         "behavior_descriptors": ["velocity_y", "floor_contact"],
         "qd_wrappers": ["velocity", "floor_contact"],
         "frequency_cut_off": 0.5,
-        "brain_descriptors": ["nn_connectivity"],
-        "weights_threshold": 0.25,
+        "brain_descriptors": ["activations_dimensionality_reduction"],
 
         # nn params
         "policy_hidden_layer_sizes": (20, 20),
@@ -318,7 +320,7 @@ if __name__ == '__main__':
                 cfg["sampler"] = sampler
                 cfg["env_name"] = env
                 cfg[
-                    "run_name"] = (f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-"
+                    "run_name"] = (f"PCA-evo-body-{cfg['grid_size']}x{cfg['grid_size']}-"
                                    f"{env.replace('-v0', '').lower()}-{sampler}")
                 # cfg.update(envs_descriptors[env])
                 print(
