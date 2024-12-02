@@ -13,10 +13,10 @@ from qdax.types import Genotype, Descriptor
 
 def get_nn_descriptor_extractor(config: Dict) -> Tuple[Callable[[Genotype], Descriptor], int]:
     assert config["solver"] == "ne"
-    if config["brain_descriptors"] == "nn_connectivity":
+    if "nn_connectivity" in config["brain_descriptors"]:
         weights_threshold = config.get("weights_threshold", 0.25)
         return partial(mean_and_std_output_connectivity, threshold=weights_threshold), 2
-    elif config["brain_descriptors"] == "activations_dimensionality_reduction":
+    elif "activations_dimensionality_reduction" in config["brain_descriptors"]:
         data_points = jnp.asarray(np.load(config.get("data_points", "data/nn_data_walker.npy")))
         scaler = joblib.load(config.get("scaler", "data/nn_obs_scaler.pkl"))
         pca = joblib.load(config.get("pca", "data/nn_obs_pca.pkl"))
