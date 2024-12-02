@@ -6,7 +6,7 @@ import joblib
 import numpy as np
 from jax import vmap
 
-from bbbqd.brain.nn_descriptors import mean_and_std_output_connectivity
+from bbbqd.brain.nn_descriptors import mean_and_std_output_connectivity, activations_dimensionality_reduction
 from qdax.core.gp.graph_utils import compute_cgp_descriptors, compute_lgp_descriptors
 from qdax.types import Genotype, Descriptor
 
@@ -20,7 +20,7 @@ def get_nn_descriptor_extractor(config: Dict) -> Tuple[Callable[[Genotype], Desc
         data_points = jnp.asarray(np.load(config.get("data_points", "data/nn_data_walker.npy")))
         scaler = joblib.load(config.get("scaler", "data/nn_obs_scaler.pkl"))
         pca = joblib.load(config.get("pca", "data/nn_obs_pca.pkl"))
-        return partial(mean_and_std_output_connectivity, scaler=scaler, pca=pca, data_points=data_points), 2
+        return partial(activations_dimensionality_reduction, scaler=scaler, pca=pca, data_points=data_points), 2
     else:
         raise NotImplementedError
 
