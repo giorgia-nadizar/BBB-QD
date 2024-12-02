@@ -4,6 +4,8 @@ from flax.core import FrozenDict
 import flax.linen as nn
 from jax import vmap
 from jax._src.flatten_util import ravel_pytree
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 def sparsity_index(activations: jnp.ndarray):
@@ -12,6 +14,25 @@ def sparsity_index(activations: jnp.ndarray):
     num_neurons = activations.size
     si = 1 - (l1_norm / (l2_norm * jnp.sqrt(num_neurons)))
     return si
+
+
+def activations_dimensionality_reduction(policy_network: nn.Module, nn_params: FrozenDict,
+                                         data_points: np.ndarray, scaler: StandardScaler, pca: PCA,
+                                         max_range: float = 2.) -> jnp.ndarray:
+    n_inner_neurons = sum(policy_network.layer_sizes[:-1])
+
+    def _activations_fn(point: jnp.ndarray) -> jnp.ndarray:
+        _, inter_res = policy_network.apply(nn_params, point, capture_intermediates=True)
+        flatten_res, _ = ravel_pytree(inter_res)
+        acts, _ = jnp.split(flatten_res, [n_inner_neurons])
+        return acts
+
+    activations = np.asarray(vmap(_activations_fn)(data_points))
+    activations_pca = pca.transform(scaler.transform(activations))
+    activations_first_two_components = activations_pca[:, :2]
+    descriptors = 0.5 + np.clip(np.mean(activations_first_two_components, axis=0), -max_range, max_range) / (
+            2 * max_range)
+    return jnp.asarray(descriptors)
 
 
 def activation_distribution_index(activations: jnp.ndarray):
