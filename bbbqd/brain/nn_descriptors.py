@@ -16,7 +16,7 @@ def sparsity_index(activations: jnp.ndarray):
     return si
 
 
-def activations_dimensionality_reduction(policy_network: nn.Module, nn_params: FrozenDict,
+def activations_dimensionality_reduction(nn_params: FrozenDict, policy_network: nn.Module,
                                          data_points: np.ndarray, scaler: StandardScaler, pca: PCA,
                                          max_range: float = 2.) -> jnp.ndarray:
     n_inner_neurons = sum(policy_network.layer_sizes[:-1])
