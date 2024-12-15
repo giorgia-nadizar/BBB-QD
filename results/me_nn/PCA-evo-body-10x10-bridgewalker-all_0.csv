@@ -1,0 +1,2 @@
+iteration,max_fitness,qd_score1,qd_score2,qd_score3,coverage1,coverage2,coverage3,time,current_time,invalid_individuals
+1,0.7295931,4.1076026,3.1808264,-2.7290885,3.125,5.859375,2.4414062,16.06304693222046,2024-12-15 02:23:21.035042,0
