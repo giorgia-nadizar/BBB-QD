@@ -339,21 +339,21 @@ if __name__ == '__main__':
 
     environments = [
         ("BridgeWalker-v0", 200),
-        ("CustomPusher-v0", 200),
-        ("UpStepper-v0", 200),
-        ("DownStepper-v0", 200),
-        ("ObstacleTraverser-v0", 200),
+        # ("CustomPusher-v0", 200),
+        # ("UpStepper-v0", 200),
+        # ("DownStepper-v0", 200),
+        # ("ObstacleTraverser-v0", 200),
 
-        ("ObstacleTraverser-v1", 200),
-        ("Hurdler-v0", 200),
+        # ("ObstacleTraverser-v1", 200),
+        # ("Hurdler-v0", 200),
         ("PlatformJumper-v0", 200),
-        ("GapJumper-v0", 200),
+        # ("GapJumper-v0", 200),
         ("CaveCrawler-v0", 200),
         ("CustomCarrier-v0", 200),
     ]
 
     seeds = range(10)
-    base_name = "evo-body-nn-10x10-walker"
+    base_name = "PCA-evo-body-nn-10x10-walker"
 
     # if "ga" in algorithms:
     #     for seed in seeds:
