@@ -318,7 +318,7 @@ def run_task_transfer_me(
             tri_repertoire.save(target_path)
             headers = ["max_fitness", "coverage1", "coverage2", "coverage3"]
             csv_logger = CSVLogger(
-                f"../results/transfer_nn/{name}.csv",
+                f"../results/transfer_nn_pca/{name}.csv",
                 header=headers
             )
             metrics = tri_qd_metrics(tri_repertoire)
@@ -327,9 +327,9 @@ def run_task_transfer_me(
 
         for rep_idx, genotypes in enumerate([genotypes1, genotypes2, genotypes3]):
             name = f"me_{config['run_name']}_{config['seed']}_g{rep_idx + 1}_{env_name}"
-            os.makedirs(f"../results/transfer_nn/{name}/", exist_ok=True)
-            init_and_store(genotypes, f"../results/transfer_nn/{name}/")
-            with open(f"../results/transfer_nn/{name}/config.yaml", "w") as file:
+            os.makedirs(f"../results/transfer_nn_pca/{name}/", exist_ok=True)
+            init_and_store(genotypes, f"../results/transfer_nn_pca/{name}/")
+            with open(f"../results/transfer_nn_pca/{name}/config.yaml", "w") as file:
                 yaml.dump(config, file)
 
 
