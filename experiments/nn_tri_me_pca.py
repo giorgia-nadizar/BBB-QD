@@ -257,11 +257,11 @@ if __name__ == '__main__':
     # samplers = ["all", "s1", "s2", "s3"]
     seeds = range(10)
     samplers = ["all"]
-    envs = ["Walker-v0"
-            # "BridgeWalker-v0",
-            # "PlatformJumper-v0",
-            # "CaveCrawler-v0",
-            # "CustomCarrier-v0"
+    envs = [ #"Walker-v0"
+             "BridgeWalker-v0",
+             "PlatformJumper-v0",
+             "CaveCrawler-v0",
+             "CustomCarrier-v0"
 
             # "Pusher-v0",
             # "UpStepper-v0",
