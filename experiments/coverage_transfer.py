@@ -292,9 +292,9 @@ if __name__ == '__main__':
     samplers = ["all", "s1", "s2", "s3"]
     for seed in seeds:
         for sampler in samplers:
-            # print(f"CGP-{sampler}, {seed}")
-            # rep_path = f"../results/me/evo-body-10x10-floor-{sampler}_{seed}/"
-            # run_coverage_transfer_cgp(rep_path)
+            print(f"CGP-{sampler}, {seed}")
+            rep_path = f"../results/me/evo-body-10x10-floor-{sampler}_{seed}/"
+            run_coverage_transfer_cgp(rep_path)
 
             print(f"NN-{sampler}, {seed}")
             rep_path = f"../results/me_nn/PCA-evo-body-10x10-walker-{sampler}_{seed}/"
