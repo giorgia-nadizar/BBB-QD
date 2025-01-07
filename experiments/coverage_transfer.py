@@ -63,7 +63,7 @@ def run_coverage_transfer_nn(
     body_encoding_fn = compute_body_encoding_function(config)
 
     # Descriptors
-    brain_descr_fn, _ = get_nn_descriptor_extractor(config)
+    brain_descr_fn, _ = get_nn_descriptor_extractor(config, policy_network)
     body_descr_fn, _ = get_body_descriptor_extractor(config)
     behavior_descr_fns = get_behavior_descriptors_functions(config)
 
