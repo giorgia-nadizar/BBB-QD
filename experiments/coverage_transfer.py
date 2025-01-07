@@ -162,7 +162,7 @@ def run_coverage_transfer_nn(
         csv_logger.log(logged_metrics)
 
     for rep_idx, genotypes in enumerate([genotypes1, genotypes2, genotypes3]):
-        name = f"nn_{config['run_name']}_{config['seed']}_g{rep_idx + 1}"
+        name = f"PCA_nn_{config['run_name']}_{config['seed']}_g{rep_idx + 1}"
         os.makedirs(f"../results/coverage/{name}/", exist_ok=True)
         init_and_store(genotypes, f"../results/coverage/{name}/")
         with open(f"../results/coverage/{name}/config.yaml", "w") as file:
@@ -292,10 +292,10 @@ if __name__ == '__main__':
     samplers = ["all", "s1", "s2", "s3"]
     for seed in seeds:
         for sampler in samplers:
-            print(f"CGP-{sampler}, {seed}")
-            rep_path = f"../results/me/evo-body-10x10-floor-{sampler}_{seed}/"
-            run_coverage_transfer_cgp(rep_path)
+            # print(f"CGP-{sampler}, {seed}")
+            # rep_path = f"../results/me/evo-body-10x10-floor-{sampler}_{seed}/"
+            # run_coverage_transfer_cgp(rep_path)
 
             print(f"NN-{sampler}, {seed}")
-            rep_path = f"../results/me_nn/evo-body-10x10-walker-{sampler}_{seed}/"
+            rep_path = f"../results/me_nn/PCA-evo-body-10x10-walker-{sampler}_{seed}/"
             run_coverage_transfer_nn(rep_path)
