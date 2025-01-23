@@ -20,7 +20,7 @@ from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.brain.nn_descriptors import mean_and_std_activity, sparsity_and_activation_distribution
 from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.wrappers import make_env
-from experiments.nn_task_transfer import compute_reconstruction_fn, filter_genomes, _rearrange_genomes
+from experiments.nn_task_transfer import compute_reconstruction_fn, filter_null_genomes, _rearrange_genomes
 from qdax.core.containers.mapelites_repertoire import MapElitesRepertoire
 from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire
 from qdax.core.gp.encoding import compute_encoding_function
@@ -71,9 +71,9 @@ def run_nn_data_descr(
     fitnesses3 = initial_repertoire.repertoire3.fitnesses
 
     # filter genotypes
-    genotypes1 = filter_genomes(genotypes1, fitnesses1)
-    genotypes2 = filter_genomes(genotypes2, fitnesses2)
-    genotypes3 = filter_genomes(genotypes3, fitnesses3)
+    genotypes1 = filter_null_genomes(genotypes1, fitnesses1)
+    genotypes2 = filter_null_genomes(genotypes2, fitnesses2)
+    genotypes3 = filter_null_genomes(genotypes3, fitnesses3)
 
     # Create evaluation function
     def description_fn(genotypes) -> jnp.ndarray:
