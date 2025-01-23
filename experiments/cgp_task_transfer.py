@@ -32,7 +32,7 @@ class _LocalFunctions:
 
 def run_task_transfer_ga(
         repertoire_path: str,
-        environments: List[Tuple[str, int]]
+        environments: List[Tuple[str, int]],
 ) -> None:
     # load config
     config = yaml.safe_load(Path(f"{repertoire_path}/config.yaml").read_text())
@@ -51,6 +51,7 @@ def run_task_transfer_ga(
 
     # extract genotypes
     genotypes = initial_repertoire.genotypes
+    fitnesses = initial_repertoire.fitnesses
 
     for env_name, episode_length in environments:
         print(f"\t{env_name}")
@@ -113,7 +114,8 @@ def run_task_transfer_ga(
 
 def run_task_transfer_me(
         repertoire_path: str,
-        environments: List[Tuple[str, int]]
+        environments: List[Tuple[str, int]],
+        best_n: int = None
 ) -> None:
     # load config
     config = yaml.safe_load(Path(f"{repertoire_path}/config.yaml").read_text())
@@ -157,10 +159,19 @@ def run_task_transfer_me(
     fitnesses2 = initial_repertoire.repertoire2.fitnesses
     fitnesses3 = initial_repertoire.repertoire3.fitnesses
 
-    # filter genotypes
-    genotypes1 = genotypes1[fitnesses1 > - jnp.inf]
-    genotypes2 = genotypes2[fitnesses2 > - jnp.inf]
-    genotypes3 = genotypes3[fitnesses3 > - jnp.inf]
+    if best_n is not None:
+        # sample only best n, if the value is available
+        top_indices_1 = jnp.argsort(fitnesses1)[-best_n:]
+        top_indices_2 = jnp.argsort(fitnesses2)[-best_n:]
+        top_indices_3 = jnp.argsort(fitnesses3)[-best_n:]
+        genotypes1 = genotypes1[top_indices_1]
+        genotypes2 = genotypes2[top_indices_2]
+        genotypes3 = genotypes3[top_indices_3]
+    else:
+        # take all genotypes
+        genotypes1 = genotypes1[fitnesses1 > - jnp.inf]
+        genotypes2 = genotypes2[fitnesses2 > - jnp.inf]
+        genotypes3 = genotypes3[fitnesses3 > - jnp.inf]
 
     for env_name, episode_length in environments:
         print(f"\t{env_name}")
@@ -227,7 +238,10 @@ def run_task_transfer_me(
             csv_logger.log(logged_metrics)
 
         for rep_idx, genotypes in enumerate([genotypes1, genotypes2, genotypes3]):
-            name = f"{config['run_name']}_{config['seed']}_g{rep_idx + 1}_{env_name}"
+            if best_n is None:
+                name = f"{config['run_name']}_{config['seed']}_g{rep_idx + 1}_{env_name}"
+            else:
+                name = f"{config['run_name']}_{config['seed']}_g{rep_idx + 1}_best{best_n}_{env_name}"
             os.makedirs(f"../results/transfer/{name}/", exist_ok=True)
             init_and_store(genotypes, f"../results/transfer/{name}/")
             with open(f"../results/transfer/{name}/config.yaml", "w") as file:
@@ -236,19 +250,21 @@ def run_task_transfer_me(
 
 if __name__ == '__main__':
 
-    algorithms = ["ga", "me"]
+    # algorithms = ["ga", "me"]
+    algorithms = ["me"]
+    best_n = 50
 
     environments = [
         ("BridgeWalker-v0", 200),
-        ("CustomPusher-v0", 200),
-        ("UpStepper-v0", 200),
-        ("DownStepper-v0", 200),
-        ("ObstacleTraverser-v0", 200),
-
-        ("ObstacleTraverser-v1", 200),
-        ("Hurdler-v0", 200),
+        # ("CustomPusher-v0", 200),
+        # ("UpStepper-v0", 200),
+        # ("DownStepper-v0", 200),
+        # ("ObstacleTraverser-v0", 200),
+        #
+        # ("ObstacleTraverser-v1", 200),
+        # ("Hurdler-v0", 200),
         ("PlatformJumper-v0", 200),
-        ("GapJumper-v0", 200),
+        # ("GapJumper-v0", 200),
         ("CaveCrawler-v0", 200),
         ("CustomCarrier-v0", 200),
     ]
@@ -261,7 +277,7 @@ if __name__ == '__main__':
             for seed in seeds:
                 print(f"me-{sampler}, {seed}")
                 repertoire_path = f"../results/me/{base_name}-floor-{sampler}_{seed}/"
-                run_task_transfer_me(repertoire_path, environments)
+                run_task_transfer_me(repertoire_path, environments, best_n)
 
     if "ga" in algorithms:
         for seed in seeds:

@@ -55,8 +55,14 @@ def _rearrange_genomes(genomes: FrozenDict) -> List[FrozenDict]:
     return [frozen_dict.freeze(_get_items_at_index(genomes, g)) for g in range(len(genomes["body"]))]
 
 
-def filter_genomes(genomes: FrozenDict, fitnesses: jnp.ndarray) -> FrozenDict:
+def filter_null_genomes(genomes: FrozenDict, fitnesses: jnp.ndarray) -> FrozenDict:
     indexes_to_keep = jnp.where(fitnesses > -jnp.inf)[0]
+    genomes_to_keep = frozen_dict.freeze(_get_items_at_index(genomes, indexes_to_keep))
+    return genomes_to_keep
+
+
+def filter_top_genomes(genomes: FrozenDict, fitnesses: jnp.ndarray, k: int) -> FrozenDict:
+    indexes_to_keep = jnp.argsort(fitnesses)[-k:]
     genomes_to_keep = frozen_dict.freeze(_get_items_at_index(genomes, indexes_to_keep))
     return genomes_to_keep
 
@@ -195,7 +201,8 @@ def run_task_transfer_ga(
 
 def run_task_transfer_me(
         repertoire_path: str,
-        environments: List[Tuple[str, int]]
+        environments: List[Tuple[str, int]],
+        best_n: int = None
 ) -> None:
     # load config
     config = yaml.load(Path(f"{repertoire_path}/config.yaml").read_text(), Loader=yaml.FullLoader)
@@ -253,9 +260,14 @@ def run_task_transfer_me(
     fitnesses3 = initial_repertoire.repertoire3.fitnesses
 
     # filter genotypes
-    genotypes1 = filter_genomes(genotypes1, fitnesses1)
-    genotypes2 = filter_genomes(genotypes2, fitnesses2)
-    genotypes3 = filter_genomes(genotypes3, fitnesses3)
+    if best_n is not None:
+        genotypes1 = filter_top_genomes(genotypes1, fitnesses1, best_n)
+        genotypes2 = filter_top_genomes(genotypes2, fitnesses2, best_n)
+        genotypes3 = filter_top_genomes(genotypes3, fitnesses3, best_n)
+    else:
+        genotypes1 = filter_null_genomes(genotypes1, fitnesses1)
+        genotypes2 = filter_null_genomes(genotypes2, fitnesses2)
+        genotypes3 = filter_null_genomes(genotypes3, fitnesses3)
 
     for env_name, episode_length in environments:
         print(f"\t{env_name}")
@@ -326,7 +338,10 @@ def run_task_transfer_me(
             csv_logger.log(logged_metrics)
 
         for rep_idx, genotypes in enumerate([genotypes1, genotypes2, genotypes3]):
-            name = f"me_{config['run_name']}_{config['seed']}_g{rep_idx + 1}_{env_name}"
+            if best_n is None:
+                name = f"me_{config['run_name']}_{config['seed']}_g{rep_idx + 1}_{env_name}"
+            else:
+                name = f"me_{config['run_name']}_{config['seed']}_g{rep_idx + 1}_best{best_n}_{env_name}"
             os.makedirs(f"../results/transfer_nn_pca/{name}/", exist_ok=True)
             init_and_store(genotypes, f"../results/transfer_nn_pca/{name}/")
             with open(f"../results/transfer_nn_pca/{name}/config.yaml", "w") as file:
@@ -335,7 +350,9 @@ def run_task_transfer_me(
 
 if __name__ == '__main__':
 
-    algorithms = ["ga", "me"]
+    # algorithms = ["ga", "me"]
+    algorithms = ["me"]
+    best_n = 50
 
     environments = [
         ("BridgeWalker-v0", 200),
@@ -367,4 +384,4 @@ if __name__ == '__main__':
             for seed in seeds:
                 print(f"me-{sampler}, {seed}")
                 repertoire_path = f"../results/me_nn/{base_name.replace('-nn', '')}-{sampler}_{seed}/"
-                run_task_transfer_me(repertoire_path, environments)
+                run_task_transfer_me(repertoire_path, environments, best_n)

@@ -18,7 +18,7 @@ from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor, get_nn
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
 from bbbqd.wrappers import make_env
-from experiments.nn_task_transfer import compute_reconstruction_fn, filter_genomes, _rearrange_genomes
+from experiments.nn_task_transfer import compute_reconstruction_fn, filter_null_genomes, _rearrange_genomes
 from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire
 from qdax.core.gp.encoding import compute_encoding_function
 from qdax.core.neuroevolution.networks.networks import MLP
@@ -94,9 +94,9 @@ def run_coverage_transfer_nn(
     fitnesses3 = initial_repertoire.repertoire3.fitnesses
 
     # filter genotypes
-    genotypes1 = filter_genomes(genotypes1, fitnesses1)
-    genotypes2 = filter_genomes(genotypes2, fitnesses2)
-    genotypes3 = filter_genomes(genotypes3, fitnesses3)
+    genotypes1 = filter_null_genomes(genotypes1, fitnesses1)
+    genotypes2 = filter_null_genomes(genotypes2, fitnesses2)
+    genotypes3 = filter_null_genomes(genotypes3, fitnesses3)
 
     # Create evaluation function
     evaluation_fn = partial(evaluate_controller_and_body, config=config, descriptors_functions=behavior_descr_fns)
