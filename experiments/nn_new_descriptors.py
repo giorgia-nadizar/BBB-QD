@@ -1,32 +1,18 @@
-import os
-from functools import partial
-from multiprocessing import Pool
 from pathlib import Path
-from typing import Tuple, Callable
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import yaml
-from flax.core import FrozenDict
-from jax import jit
 
-from bbbqd.behavior.behavior_descriptors import get_behavior_descriptors_functions
-from bbbqd.body.body_descriptors import get_body_descriptor_extractor
-from bbbqd.body.body_utils import compute_body_encoding_function, compute_body_float_genome_length, compute_body_mask
-from bbbqd.brain.brain_descriptors import get_graph_descriptor_extractor, get_nn_descriptor_extractor
-from bbbqd.brain.controllers import compute_controller_generation_fn
-from bbbqd.brain.nn_descriptors import mean_and_std_activity, sparsity_and_activation_distribution
-from bbbqd.core.evaluation import evaluate_controller_and_body
+from bbbqd.brain.nn_descriptors import sparsity_and_activation_distribution
 from bbbqd.wrappers import make_env
 from experiments.nn_task_transfer import compute_reconstruction_fn, filter_null_genomes, _rearrange_genomes
 from qdax.core.containers.mapelites_repertoire import MapElitesRepertoire
 from qdax.core.containers.mapelites_tri_repertoire import MapElitesTriRepertoire
-from qdax.core.gp.encoding import compute_encoding_function
 from qdax.core.neuroevolution.networks.networks import MLP
-from qdax.types import RNGKey, Fitness, Descriptor, ExtraScores
-from qdax.utils.metrics import default_triqd_metrics, CSVLogger, default_qd_metrics
+from qdax.utils.metrics import default_qd_metrics
 
 
 # This is a placeholder class, all local functions will be added as its attributes

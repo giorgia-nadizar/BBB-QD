@@ -5,11 +5,10 @@ import time
 from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
+from typing import Tuple, Dict, Any, Callable, Union, List
 
 import jax
 import jax.numpy as jnp
-from typing import Tuple, Dict, Any, Callable, Union, List
-
 import yaml
 from flax.core import FrozenDict, frozen_dict
 from jax import jit
@@ -18,12 +17,12 @@ from bbbqd.body.body_utils import compute_body_mask, compute_body_mutation_mask,
     compute_body_float_genome_length
 from bbbqd.brain.controllers import compute_controller_generation_fn
 from bbbqd.core.evaluation import evaluate_controller_and_body
-from bbbqd.core.misc import isoline_and_body_mutation, nn_and_body_mutation
+from bbbqd.core.misc import nn_and_body_mutation
 from bbbqd.wrappers import make_env
 from qdax.baselines.genetic_algorithm import GeneticAlgorithm
-from qdax.core.emitters.mutation_operators import isoline_variation, gaussian_mutation
+from qdax.core.emitters.mutation_operators import gaussian_mutation
 from qdax.core.emitters.standard_emitters import MixingEmitter
-from qdax.core.gp.individual import compute_genome_mask, generate_population, compute_mutation_fn
+from qdax.core.gp.individual import generate_population, compute_mutation_fn
 from qdax.core.neuroevolution.networks.networks import MLP
 from qdax.types import RNGKey, Fitness, ExtraScores
 from qdax.utils.metrics import default_ga_metrics, CSVLogger
