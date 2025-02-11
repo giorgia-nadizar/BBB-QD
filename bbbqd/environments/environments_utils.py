@@ -10,7 +10,7 @@ def extract_ground_profile_masses_ids(env: Union[EvoGymBase, Env, gym.Wrapper],
                                       side_length: float = 0.1) -> Dict[str, List[int]]:
     # extract all ground masses
     ground_data_tuples = []
-    allowed_ground_names = ["ground", "new_object_2", "terrain"]  # some envs have different names
+    allowed_ground_names = ["ground", "new_object_2", "terrain", "new_object_1", "new_object_4"]  # some envs have different names
     for i in range(1, 8):
         allowed_ground_names.append(f"platform_{i}")
     for ground_name in allowed_ground_names:
