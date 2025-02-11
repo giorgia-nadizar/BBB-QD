@@ -355,18 +355,48 @@ if __name__ == '__main__':
     best_n = 50
 
     environments = [
-        ("BridgeWalker-v0", 200),
-        # ("CustomPusher-v0", 200),
-        # ("UpStepper-v0", 200),
-        # ("DownStepper-v0", 200),
-        # ("ObstacleTraverser-v0", 200),
+        # done already
+        # ("BridgeWalker-v0", 200),
+        # ("PlatformJumper-v0", 200),
+        # ("CaveCrawler-v0", 200),
+        # ("CustomCarrier-v0", 200),
 
-        # ("ObstacleTraverser-v1", 200),
-        # ("Hurdler-v0", 200),
-        ("PlatformJumper-v0", 200),
-        # ("GapJumper-v0", 200),
-        ("CaveCrawler-v0", 200),
-        ("CustomCarrier-v0", 200),
+        # walking
+        ("BidirectionalWalker-v0", 200),
+
+        # object manipulation
+        ("CustomPusher-v0", 200),
+        # ("Thrower-v0", 200), # gives error
+        ("BeamToppler-v0", 200),
+        ("Pusher-v1", 200),
+        # ("Carrier-v1", 200), # gives error
+        ("Catcher-v0", 200),
+        # ("Slider-v0", 200), # gives error
+        # ("Lifter-v0", 200), # gives error
+
+        # all climb give error because too narrow
+
+        # locomotion
+        ("UpStepper-v0", 200),
+        ("DownStepper-v0", 200),
+        ("ObstacleTraverser-v0", 200),
+        ("ObstacleTraverser-v1", 200),
+        ("Hurdler-v0", 200),
+        ("GapJumper-v0", 200),
+        ("Traverser-v0", 200),
+
+        # misc
+        ("Flipper-v0", 200),
+        ("Jumper-v0", 200),
+        ("Balancer-v0", 200),
+        # ("Balancer-v1", 200), # gives error
+
+        # shape change
+        ("AreaMaximizer-v0", 200),
+        ("AreaMinimizer-v0", 200),
+        ("WingspanMazimizer-v0", 200),
+        ("HeightMaximizer-v0", 200),
+
     ]
 
     seeds = range(10)
