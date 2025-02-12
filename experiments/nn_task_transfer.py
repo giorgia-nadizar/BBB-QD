@@ -399,14 +399,15 @@ if __name__ == '__main__':
     ]
 
     seeds = range(10)
-    base_name = "PCA-evo-body-nn-10x10-walker"
 
+    base_name = "evo-body-nn-10x10-walker"
     if "ga" in algorithms:
         for seed in seeds:
             print(f"ga, {seed}")
             repertoire_path = f"../results/ga/{base_name}_{seed}/"
             run_task_transfer_ga(repertoire_path, environments)
 
+    base_name = "PCA-evo-body-nn-10x10-walker"
     # if "me" in algorithms:
     #     samplers = ["all", "s1", "s2", "s3"]
     #     for sampler in samplers:
