@@ -350,8 +350,7 @@ def run_task_transfer_me(
 
 if __name__ == '__main__':
 
-    # algorithms = ["ga", "me"]
-    algorithms = ["me"]
+    algorithms = ["ga", "me"]
     best_n = 50
 
     environments = [
