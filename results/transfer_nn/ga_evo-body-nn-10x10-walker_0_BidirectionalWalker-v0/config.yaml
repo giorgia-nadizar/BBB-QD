@@ -1,0 +1,26 @@
+body_encoding: indirect
+controller: local
+env_name: BidirectionalWalker-v0
+episode_length: 200
+fixed_body: false
+flags:
+  observe_time: false
+  observe_voxel_vel: true
+  observe_voxel_volume: true
+grid_size: 10
+jax: true
+max_env_size: 5
+n_body_elements: 20
+n_iterations: 4000
+p_mut_body: 0.05
+parents_size: 45
+policy_hidden_layer_sizes: !!python/tuple
+- 20
+- 20
+pop_size: 50
+program_wrapper: true
+run_name: evo-body-nn-10x10-walker
+seed: 0
+sigma: 0.05
+skip: 5
+solver: ne
