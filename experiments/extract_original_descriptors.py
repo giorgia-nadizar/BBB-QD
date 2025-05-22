@@ -125,8 +125,8 @@ if __name__ == '__main__':
                         "brain_descriptors_1": d1[1],
                         "body_descriptors_0": d2[0],
                         "body_descriptors_1": d2[1],
-                        "behavior_descriptors_0": d2[0],
-                        "behavior_descriptors_1": d2[1],
+                        "behavior_descriptors_0": d3[0],
+                        "behavior_descriptors_1": d3[1],
                     })
 
         df_of_descriptors = pd.DataFrame(dicts_for_df)
