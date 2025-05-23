@@ -139,7 +139,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
     name = f"{config.get('run_name', 'trial')}_{config['seed']}"
 
     csv_logger = CSVLogger(
-        f"../results/ga/{name}.csv",
+        f"../paper_paper_results/ga/{name}.csv",
         header=headers
     )
 
@@ -157,14 +157,14 @@ def run_body_evo_ga(config: Dict[str, Any]):
         csv_logger.log(logged_metrics)
         print(f"{i}\t{logged_metrics['max_fitness']}")
 
-    os.makedirs(f"../results/ga/{name}/", exist_ok=True)
-    repertoire.save(f"../results/ga/{name}/")
-    with open(f"../results/ga/{name}/config.yaml", "w") as file:
+    os.makedirs(f"../paper_results/ga/{name}/", exist_ok=True)
+    repertoire.save(f"../paper_results/ga/{name}/")
+    with open(f"../paper_results/ga/{name}/config.yaml", "w") as file:
         yaml.dump(config, file)
 
 
 if __name__ == '__main__':
-    seeds = range(10)
+    seeds = range(10, 20)
     base_cfg = {
         "n_nodes": 50,
         "p_mut_inputs": 0.1,
@@ -194,20 +194,20 @@ if __name__ == '__main__':
         "fixed_body": False,
     }
 
-    envs = [  # "Walker-v0"
-        "BridgeWalker-v0",
-        # "Pusher-v0",
-        # "UpStepper-v0",
-        # "DownStepper-v0",
-        # "ObstacleTraverser-v0",
+    envs = ["Walker-v0"
+            # "BridgeWalker-v0",
+            # "Pusher-v0",
+            # "UpStepper-v0",
+            # "DownStepper-v0",
+            # "ObstacleTraverser-v0",
 
-        # "ObstacleTraverser-v1",
-        # "Hurdler-v0",
-        "PlatformJumper-v0",
-        # "GapJumper-v0",
-        "CaveCrawler-v0",
-        "CustomCarrier-v0"
-    ]
+            # "ObstacleTraverser-v1",
+            # "Hurdler-v0",
+            # "PlatformJumper-v0",
+            # "GapJumper-v0",
+            # "CaveCrawler-v0",
+            # "CustomCarrier-v0"
+            ]
 
     counter = 0
     for env in envs:
@@ -216,7 +216,7 @@ if __name__ == '__main__':
             cfg = copy.deepcopy(base_cfg)
             cfg["seed"] = seed
             cfg["env_name"] = env
-            cfg["run_name"] = f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-{env.replace('-v0', '').lower()}"
+            cfg["run_name"] = "evobb_graph"
             print(
                 f"{counter}/{len(seeds) * len(envs)} -> evo-body-cgp-{cfg['grid_size']}x{cfg['grid_size']}, {env}, {seed}")
             run_body_evo_ga(cfg)

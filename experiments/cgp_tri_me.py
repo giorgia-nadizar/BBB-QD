@@ -197,7 +197,7 @@ def run_body_evo_me(config: Dict[str, Any]):
     name = f"{config.get('run_name', 'trial')}_{config['seed']}"
 
     csv_logger = CSVLogger(
-        f"../results/me/{name}.csv",
+        f"../paper_results/me/{name}.csv",
         header=headers
     )
 
@@ -222,9 +222,9 @@ def run_body_evo_me(config: Dict[str, Any]):
         fitness_evaluations = fitness_evaluations + config["parents_size"] - logged_metrics["invalid_individuals"]
         print(f"{i}\t{logged_metrics['max_fitness']}")
 
-    os.makedirs(f"../results/me/{name}/", exist_ok=True)
-    repertoire.save(f"../results/me/{name}/")
-    with open(f"../results/me/{name}/config.yaml", "w") as file:
+    os.makedirs(f"../paper_results/me/{name}/", exist_ok=True)
+    repertoire.save(f"../paper_results/me/{name}/")
+    with open(f"../paper_results/me/{name}/config.yaml", "w") as file:
         yaml.dump(config, file)
 
     i = config["n_iterations"]
@@ -249,42 +249,28 @@ def run_body_evo_me(config: Dict[str, Any]):
         print(f"{i}\t{logged_metrics['max_fitness']}")
         i += 1
 
-    repertoire.save(f"../results/me/{name}/extra_")
+    repertoire.save(f"../paper_results/me/{name}/extra_")
 
 
 if __name__ == '__main__':
-    # samplers = ["all", "s1", "s2", "s3"]
-    seeds = range(10)
-    samplers = ["all"]
-    envs = ["BridgeWalker-v0",
-            "Pusher-v0",
-            "UpStepper-v0",
-            "DownStepper-v0",
-            "ObstacleTraverser-v0",
-
-            "ObstacleTraverser-v1",
-            "Hurdler-v0",
-            "PlatformJumper-v0",
-            "GapJumper-v0",
-            "CaveCrawler-v0",
+    samplers = {
+        "all": "3b", "s1": "brain", "s2": "body", "s3": "behavior"
+    }
+    seeds = range(10, 20)
+    envs = ["Walker-v0"
+            # "BridgeWalker-v0",
+            #     "Pusher-v0",
+            #     "UpStepper-v0",
+            #     "DownStepper-v0",
+            #     "ObstacleTraverser-v0",
+            #
+            #     "ObstacleTraverser-v1",
+            #     "Hurdler-v0",
+            #     "PlatformJumper-v0",
+            #     "GapJumper-v0",
+            #     "CaveCrawler-v0",
             # "Carrier-v0"
             ]
-    envs_descriptors = {
-        # "Walker-v0": {
-        #     "behavior_descriptors": ["velocity_y", "floor_contact"],
-        #     "qd_wrappers": ["velocity", "floor_contact"],
-        #     "frequency_cut_off": 0.5
-        # },
-        # "Climber-v0": {
-        #    "behavior_descriptors": ["floor_contact", "walls_contact"],
-        #    "qd_wrappers": ["floor_contact", "walls_contact"],
-        #    "body_trim": True
-        # },
-        # "CustomCarrier-v0": {
-        #     "behavior_descriptors": ["object_angle", "floor_contact"],
-        #     "qd_wrappers": ["object_angle", "floor_contact"],
-        # }
-    }
 
     base_cfg = {
         "n_nodes": 50,
@@ -321,17 +307,14 @@ if __name__ == '__main__':
 
     counter = 0
     for seed in seeds:
-        for sampler in samplers:
-            # for env in envs_descriptors.keys():
+        for sampler in samplers.keys():
             for env in envs:
                 counter += 1
                 cfg = copy.deepcopy(base_cfg)
                 cfg["seed"] = seed
                 cfg["sampler"] = sampler
                 cfg["env_name"] = env
-                cfg[
-                    "run_name"] = (f"evo-body-{cfg['grid_size']}x{cfg['grid_size']}-"
-                                   f"{env.replace('-v0', '').lower()}-{sampler}")
+                cfg["run_name"] = f"evobb_graph_{samplers[sampler]}"
                 # cfg.update(envs_descriptors[env])
                 print(
                     f"{counter}/{len(seeds) * len(samplers) * len(envs)} -> evo-body-"
