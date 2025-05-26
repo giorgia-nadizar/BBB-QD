@@ -57,9 +57,12 @@ COPY setup.py ./
 RUN python setup.py install
 
 COPY bbbqd bbbqd
-COPY examples/wrappers_tester.py ./
-COPY examples/install_tester.py ./
-CMD ["python", "./wrappers_tester.py"]
+#COPY examples/wrappers_tester.py ./
+#COPY examples/install_tester.py ./
+COPY experiments/cgp_body_ga.py ./
+COPY experiments/nn_body_ga.py ./
+CMD ["python", "./cgp_body_ga.py"]
+#CMD ["python", "./nn_body_ga.py"]
 
 # xvfb-run -a python ./video.py
 #CMD ["python"]
