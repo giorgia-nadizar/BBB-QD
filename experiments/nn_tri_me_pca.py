@@ -255,9 +255,11 @@ def run_body_evo_me(config: Dict[str, Any]):
 
 if __name__ == '__main__':
     samplers = {
-        "all": "3b", "s1": "brain", "s2": "body", "s3": "behavior"
+        # "all": "3b", "s1": "brain", "s2": "body", "s3": "behavior",
+        "s1+s2": "brain+body", "s2+s3": "body+behavior",
+        "s1+s3": "brain+behavior"
     }
-    seeds = range(10, 20)
+    seeds = range(20)
     envs = ["Walker-v0"
             # "BridgeWalker-v0",
             # "PlatformJumper-v0",
