@@ -21,6 +21,14 @@ from qdax.types import (
 def sampling_function(function_name: str) -> Callable[[MapElitesTriRepertoire], int]:
     if "0" in function_name or "both" in function_name or "all" in function_name:
         return lambda x: 0
+    elif "+" in function_name or "&" in function_name:
+        if "1" in function_name and "2" in function_name:
+            return lambda x: -2
+        elif "1" in function_name and "3" in function_name:
+            return lambda x: -3
+        elif "2" in function_name and "3" in function_name:
+            return lambda x: 6
+        raise ValueError("Must specify combination of samplers.")
     elif "1" in function_name:
         return lambda x: 1
     elif "2" in function_name:
