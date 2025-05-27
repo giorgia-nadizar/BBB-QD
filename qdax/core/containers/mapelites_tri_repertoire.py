@@ -71,7 +71,7 @@ class MapElitesTriRepertoire(flax.struct.PyTreeNode):
     def update_sampling_mask(self, sampling_id: int) -> MapElitesTriRepertoire:
         sampling_mask1 = jnp.ones(len(self.repertoire1.centroids)) * (sampling_id < 2)
         sampling_mask2 = jnp.ones(len(self.repertoire2.centroids)) * (sampling_id % 2 == 0)
-        sampling_mask3 = jnp.ones(len(self.repertoire2.centroids)) * (sampling_id % 3 == 0)
+        sampling_mask3 = jnp.ones(len(self.repertoire3.centroids)) * (sampling_id % 3 == 0)
         sampling_mask = jnp.concatenate([sampling_mask1, sampling_mask2, sampling_mask3])
 
         return MapElitesTriRepertoire(
