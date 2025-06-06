@@ -139,7 +139,7 @@ def run_body_evo_ga(config: Dict[str, Any]):
     name = f"{config.get('run_name', 'trial')}_{config['seed']}"
 
     csv_logger = CSVLogger(
-        f"../paper_paper_results/ga/{name}.csv",
+        f"../paper_results/ga/{name}.csv",
         header=headers
     )
 
