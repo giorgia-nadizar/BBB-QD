@@ -185,17 +185,17 @@ def run_task_transfer_ga(
             ga_repertoire.save(target_path)
             headers = ["max_fitness"]
             csv_logger = CSVLogger(
-                f"../results/transfer_nn/{name}.csv",
+                f"../paper_results/ga_transfer/{name}.csv",
                 header=headers
             )
             metrics = default_ga_metrics(ga_repertoire)
             logged_metrics = {k: metrics[k] for k in headers}
             csv_logger.log(logged_metrics)
 
-        name = f"ga_{config['run_name']}_{config['seed']}_{env_name}"
-        os.makedirs(f"../results/transfer_nn/{name}/", exist_ok=True)
-        init_and_store(genotypes, f"../results/transfer_nn/{name}/")
-        with open(f"../results/transfer_nn/{name}/config.yaml", "w") as file:
+        name = f"{config['run_name']}_{config['seed']}_{env_name}"
+        os.makedirs(f"../paper_results/ga_transfer/{name}/", exist_ok=True)
+        init_and_store(genotypes, f"../paper_results/ga_transfer/{name}/")
+        with open(f"../paper_results/ga_transfer/{name}/config.yaml", "w") as file:
             yaml.dump(config, file)
 
 
@@ -330,7 +330,7 @@ def run_task_transfer_me(
             tri_repertoire.save(target_path)
             headers = ["max_fitness", "coverage1", "coverage2", "coverage3"]
             csv_logger = CSVLogger(
-                f"../results/transfer_nn_pca/{name}.csv",
+                f"../paper_results/me_transfer/{name}.csv",
                 header=headers
             )
             metrics = tri_qd_metrics(tri_repertoire)
@@ -338,13 +338,10 @@ def run_task_transfer_me(
             csv_logger.log(logged_metrics)
 
         for rep_idx, genotypes in enumerate([genotypes1, genotypes2, genotypes3]):
-            if best_n is None:
-                name = f"me_{config['run_name']}_{config['seed']}_g{rep_idx + 1}_{env_name}"
-            else:
-                name = f"me_{config['run_name']}_{config['seed']}_g{rep_idx + 1}_best{best_n}_{env_name}"
-            os.makedirs(f"../results/transfer_nn_pca/{name}/", exist_ok=True)
-            init_and_store(genotypes, f"../results/transfer_nn_pca/{name}/")
-            with open(f"../results/transfer_nn_pca/{name}/config.yaml", "w") as file:
+            name = f"{config['run_name']}_{config['seed']}_g{rep_idx + 1}_{env_name}"
+            os.makedirs(f"../paper_results/me_transfer/{name}/", exist_ok=True)
+            init_and_store(genotypes, f"../paper_results/me_transfer/{name}/")
+            with open(f"../paper_results/me_transfer/{name}/config.yaml", "w") as file:
                 yaml.dump(config, file)
 
 
@@ -398,20 +395,19 @@ if __name__ == '__main__':
 
     ]
 
-    seeds = range(10)
+    seeds = range(10, 20)
 
-    base_name = "evo-body-nn-10x10-walker"
+    base_name = "evobb_nn"
     if "ga" in algorithms:
         for seed in seeds:
             print(f"ga, {seed}")
-            repertoire_path = f"../results/ga/{base_name}_{seed}/"
+            repertoire_path = f"../paper_results/ga/{base_name}_{seed}/"
             run_task_transfer_ga(repertoire_path, environments)
 
-    base_name = "PCA-evo-body-nn-10x10-walker"
-    # if "me" in algorithms:
-    #     samplers = ["all", "s1", "s2", "s3"]
-    #     for sampler in samplers:
-    #         for seed in seeds:
-    #             print(f"me-{sampler}, {seed}")
-    #             repertoire_path = f"../results/me_nn/{base_name.replace('-nn', '')}-{sampler}_{seed}/"
-    #             run_task_transfer_me(repertoire_path, environments, best_n)
+    if "me" in algorithms:
+        samplers = ["body", "brain", "behavior", "3b"]
+        for sampler in samplers:
+            for seed in seeds:
+                print(f"me-{sampler}, {seed}")
+                repertoire_path = f"../paper_results/me/{base_name}_{sampler}_{seed}/"
+                run_task_transfer_me(repertoire_path, environments, best_n)
