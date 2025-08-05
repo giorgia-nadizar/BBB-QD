@@ -54,7 +54,7 @@ def extract_original_descriptors(transferred_repertoire_path: str,
 
 if __name__ == '__main__':
 
-    seeds = range(10)
+    seeds = range(20)
     environments = [
         # done already
         ("BridgeWalker-v0", 200),
@@ -99,23 +99,17 @@ if __name__ == '__main__':
         ("HeightMaximizer-v0", 200),
 
     ]
-    base_names = {
-        "cgp": "evo-body-10x10-floor",
-        "nn": "PCA-evo-body-10x10-walker"
-    }
-    samplers = ["all", "s1", "s2", "s3"]
+    samplers = ["3b", "brain", "body", "behavior"]
 
-    for representation in ["nn", "cgp"]:
+    for representation in ["nn", "graph"]:
         dicts_for_df = []
         for sampler in samplers:
             for seed in seeds:
                 for environment, _ in environments:
                     print(f"{representation} - {sampler}, {seed}, {environment}")
-                    base_name = base_names[representation]
-                    run_name = f"{base_name}-{sampler}_{seed}"
-                    original_rep_path = f"../results/me{'_nn' if representation == 'nn' else ''}/{run_name}/"
-                    transferred_rep_path = (f"../results/transfer{'_nn_pca' if representation == 'nn' else ''}/"
-                                            f"{'me_' if representation == 'nn' else ''}{run_name}_gx_best50_{environment}/")
+                    run_name = f"evobb_{representation}_{sampler}_{seed}_{environment}"
+                    original_rep_path = f"../paper_results/me/evobb_{representation}_{sampler}_{seed}/"
+                    transferred_rep_path = f"../paper_results/me_transfer/evobb_{representation}_{sampler}_{seed}_gx_{environment}/"
                     d1, d2, d3 = extract_original_descriptors(transferred_rep_path, original_rep_path)
                     dicts_for_df.append({
                         "sampler": sampler,
@@ -131,4 +125,5 @@ if __name__ == '__main__':
 
         df_of_descriptors = pd.DataFrame(dicts_for_df)
         df_of_descriptors.to_csv(
-            f"../results/transfer{'_nn_pca' if representation == 'nn' else ''}/original_descriptors.csv", index=False)
+            f"../paper_results/me_transfer/original_descriptors_{representation}_final.csv",
+            index=False)
